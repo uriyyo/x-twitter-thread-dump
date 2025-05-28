@@ -18,6 +18,7 @@ def html_to_image(
     *,
     headless: bool = True,
     mobile: bool = False,
+    delay: float = 0.5,
 ) -> Image.Image:
     with sync_playwright() as p:
         browser = p.chromium.launch(
@@ -28,6 +29,9 @@ def html_to_image(
 
         page = ctx.new_page()
         page.set_content(html)
+
+        page.wait_for_timeout(delay * 1_000)
+
         page.wait_for_load_state(state="networkidle")
 
         screenshot = page.locator(".thread-container").screenshot()
@@ -42,6 +46,7 @@ async def html_to_image_async(
     *,
     headless: bool = True,
     mobile: bool = False,
+    delay: float = 0.5,
 ) -> Image.Image:
     async with async_playwright() as p:
         browser = await p.chromium.launch(
@@ -52,6 +57,9 @@ async def html_to_image_async(
 
         page = await ctx.new_page()
         await page.set_content(html)
+
+        await page.wait_for_timeout(delay * 1_000)
+
         await page.wait_for_load_state(state="networkidle")
 
         screenshot = await page.locator(".thread-container").screenshot()
