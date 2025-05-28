@@ -81,9 +81,9 @@ def async_to_sync[**P, R](func: Callable[P, Coroutine[Any, Any, R]], /) -> Calla
 
 __all__ = [
     "alimited",
+    "async_to_sync",
     "get_tweet_id_from_url",
     "limited",
     "parse_guest_token",
     "response_to_bs4",
-    "async_to_sync",
 ]

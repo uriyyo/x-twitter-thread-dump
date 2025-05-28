@@ -71,6 +71,7 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
         thread: Thread,
         *,
         tweets_per_image: None = None,
+        mobile: bool = False,
     ) -> Image:
         pass
 
@@ -80,6 +81,7 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
         thread: Thread,
         *,
         tweets_per_image: int,
+        mobile: bool = False,
     ) -> list[Image]:
         pass
 
@@ -88,6 +90,7 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
         thread: list[Tweet],
         *,
         tweets_per_image: int | None = None,
+        mobile: bool = False,
     ) -> list[Image] | Image:
         result = self._thread_to_html_chunks(
             thread,
@@ -96,10 +99,10 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
 
         match result:
             case [*htmls]:
-                imgs = await gather(*[html_to_image_async(html) for html in htmls])
+                imgs = await gather(*[html_to_image_async(html, mobile=mobile) for html in htmls])
                 return [*imgs]
             case html:
-                return await html_to_image_async(cast(str, html))
+                return await html_to_image_async(cast(str, html), mobile=mobile)
 
 
 @asynccontextmanager

@@ -4,12 +4,29 @@ from playwright.sync_api import sync_playwright
 
 from .images import bytes_to_image
 
+MOBILE_CONFIG = {
+    "color_scheme": "dark",
+    "viewport": {"width": 500, "height": 400},
+    "device_scale_factor": 3,
+    "is_mobile": True,
+}
 
-def html_to_image(html: str, /, *, headless: bool = True) -> Image.Image:
+
+def html_to_image(
+    html: str,
+    /,
+    *,
+    headless: bool = True,
+    mobile: bool = False,
+) -> Image.Image:
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=headless)
+        browser = p.chromium.launch(
+            headless=headless,
+            channel="chrome",
+        )
+        ctx = browser.new_context(**(MOBILE_CONFIG if mobile else {}))  # type: ignore[arg-type]
 
-        page = browser.new_page()
+        page = ctx.new_page()
         page.set_content(html)
         page.wait_for_load_state(state="networkidle")
 
@@ -19,11 +36,21 @@ def html_to_image(html: str, /, *, headless: bool = True) -> Image.Image:
         return bytes_to_image(screenshot)
 
 
-async def html_to_image_async(html: str, /, *, headless: bool = True) -> Image.Image:
+async def html_to_image_async(
+    html: str,
+    /,
+    *,
+    headless: bool = True,
+    mobile: bool = False,
+) -> Image.Image:
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=headless)
+        browser = await p.chromium.launch(
+            headless=headless,
+            channel="chrome",
+        )
+        ctx = await browser.new_context(**(MOBILE_CONFIG if mobile else {}))  # type: ignore[arg-type]
 
-        page = await browser.new_page()
+        page = await ctx.new_page()
         await page.set_content(html)
         await page.wait_for_load_state(state="networkidle")
 

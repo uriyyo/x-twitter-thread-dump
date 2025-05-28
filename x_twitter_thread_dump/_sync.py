@@ -70,6 +70,7 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
         thread: Thread,
         *,
         tweets_per_image: None = None,
+        mobile: bool = False,
     ) -> Image:
         pass
 
@@ -79,6 +80,7 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
         thread: Thread,
         *,
         tweets_per_image: int,
+        mobile: bool = False,
     ) -> list[Image]:
         pass
 
@@ -87,6 +89,7 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
         thread: list[Tweet],
         *,
         tweets_per_image: int | None = None,
+        mobile: bool = False,
     ) -> list[Image] | Image:
         result = self._thread_to_html_chunks(
             thread,
@@ -95,9 +98,9 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
 
         match result:
             case [*htmls]:
-                return [html_to_image(html) for html in htmls]
+                return [html_to_image(html, mobile=mobile) for html in htmls]
             case html:
-                return html_to_image(cast(str, html))
+                return html_to_image(cast(str, html), mobile=mobile)
 
 
 @contextmanager
