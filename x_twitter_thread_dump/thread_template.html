@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Thread</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            background-color: #000000; /* Dark mode background */
+            color: #e7e9ea; /* Dark mode text */
+        }
+        .thread-container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #000000; /* Dark mode background */
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+        .tweet {
+            padding: 10px 24px 4px 16px; /* Increased right padding from 16px to 24px */
+            display: flex;
+            flex-direction: row;
+        }
+        .avatar-column {
+            margin-right: 8px; /* Padding next to avatar */
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #333639; /* Dark mode placeholder avatar color */
+            z-index: 1; /* Ensure avatar is above the thread connector line */
+        }
+        .thread-connector {
+            width: 2px;
+            background-color: #2f3336; /* Dark mode line color */
+            flex-grow: 1; /* Make it take available vertical space in avatar-column */
+            margin-top: 4px; /* Space between avatar and start of line */
+        }
+        .tweet-content {
+            width: 100%;
+        }
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0px; /* Reduced from 2px to 0px */
+        }
+        .user-info {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+        .username {
+            font-weight: bold;
+            color: #e7e9ea; /* Dark mode text */
+        }
+        .username:hover {
+            text-decoration: underline;
+        }
+        .user-handle-timestamp {
+            color: #71767b; /* Dark mode secondary text */
+            font-size: 0.9375em;
+        }
+        .timestamp::before {
+            content: "·";
+            margin: 0 4px;
+        }
+        .tweet-text {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.9375em;
+            line-height: 1.3125;
+            margin-top: 2px; /* Added small top margin instead */
+            margin-bottom: 12px;
+        }
+        
+        /* Reduce spacing when there's no media after the text */
+        .tweet-body-content > p.tweet-text:last-child {
+            margin-bottom: 4px; /* Reduced from 12px to 4px when there's no media */
+        }
+        
+        .tweet-media {
+            margin-bottom: 2px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #2f3336; /* Dark mode border */
+            display: grid;
+            gap: 2px;
+        }
+        .tweet-media img, .tweet-media video {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+        
+        /* Single media - display at full height */
+        .tweet-media.media-count-1 { 
+            grid-template-columns: 1fr; 
+            max-height: 510px; /* Twitter's max height */
+        }
+        .tweet-media.media-count-1 img, .tweet-media.media-count-1 video {
+            object-fit: contain; /* Preserve aspect ratio without cropping */
+            background-color: #000; /* For images that don't fill the container */
+        }
+        
+        .tweet-media.media-count-2 { grid-template-columns: 1fr 1fr; aspect-ratio: 2/1; }
+        .tweet-media.media-count-3 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            aspect-ratio: 1.5;
+        }
+        .tweet-media.media-count-3 > :nth-child(1) { grid-column: 1 / 2; grid-row: 1 / 3; }
+        .tweet-media.media-count-3 > :nth-child(2) { grid-column: 2 / 3; grid-row: 1 / 2; }
+        .tweet-media.media-count-3 > :nth-child(3) { grid-column: 2 / 3; grid-row: 2 / 3; }
+        .tweet-media.media-count-4 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            aspect-ratio: 1/1;
+        }
+        .quoted-tweet-container {
+            margin-top: 12px;
+            border: 1px solid #2f3336; /* Dark mode border */
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .quoted-tweet-container .tweet {
+            padding: 10px 12px;
+            border-bottom: none; /* Ensure no border for quoted tweets either */
+        }
+        /* Adjust styling for quoted tweet layout without avatar-column */
+        .quoted-tweet {
+            display: block; /* Change from flex to block */
+            padding: 10px 12px;
+        }
+        .quoted-tweet .tweet-header {
+            align-items: flex-start;
+            margin-bottom: 1px; /* Reduced from 4px to 1px for quoted tweets */
+        }
+        .quoted-tweet .tweet-header .avatar {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
+        .quoted-tweet .username { font-size: 0.9em; }
+        .quoted-tweet .tweet-text { font-size: 0.9em; margin-bottom: 8px; }
+        .quoted-tweet .tweet-media { margin-bottom: 8px; border-radius: 12px; }
+        .quoted-tweet .tweet-footer { display: none; }
+
+        .tweet-footer {
+            display: flex;
+            justify-content: space-between; /* Changed from space-around to space-between */
+            color: #71767b; /* Dark mode secondary text */
+            font-size: 0.8125em;
+            padding-top: 8px;
+            width: 100%; /* Changed from max-width: 425px to width: 100% */
+        }
+        .tweet-footer span {
+            display: flex;
+            align-items: center;
+            gap: 6px; /* Increased gap slightly for icons */
+            padding-right: 8px; /* Add some padding to the right for better spacing */
+            min-width: 18px; /* Ensure minimum width for consistent alignment */
+        }
+        
+        /* Icon base styling */
+        .icon-reply, .icon-retweet, .icon-like, .icon-views {
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .icon-reply::before, .icon-retweet::before, .icon-like::before, .icon-views::before {
+            content: "";
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 18px;
+        }
+
+        .icon-reply::before {
+            background-image: url('data:image/svg+xml,<svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="%2371767b"><g><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path></g></svg>');
+        }
+
+        .icon-retweet::before {
+            background-image: url('data:image/svg+xml,<svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="%2371767b"><g><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H11V4h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z"></path></g></svg>');
+        }
+
+        .icon-like::before {
+            background-image: url('data:image/svg+xml,<svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="%2371767b"><g><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path></g></svg>');
+        }
+
+        .icon-views::before {
+            background-image: url('data:image/svg+xml,<svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="%2371767b"><g><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"></path></g></svg>');
+        }
+        
+        /* Hover effects for icons */
+        .tweet-footer span:hover {
+            color: #1d9bf0; /* Twitter blue on hover */
+        }
+        
+        .tweet-footer span:hover .icon-reply::before {
+            background-image: url('data:image/svg+xml,<svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="%231d9bf0"><g><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path></g></svg>');
+        }
+        
+        .tweet-footer span:hover .icon-retweet::before {
+            background-image: url('data:image/svg+xml,<svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="%2300ba7c"><g><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H11V4h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z"></path></g></svg>');
+            color: #00ba7c; /* Twitter green for retweets */
+        }
+        
+        .tweet-footer span:hover .icon-like::before {
+            background-image: url('data:image/svg+xml,<svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="%23f91880"><g><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path></g></svg>');
+            color: #f91880; /* Twitter pink for likes */
+        }
+        
+        .tweet-footer span:hover .icon-views::before {
+            background-image: url('data:image/svg+xml,<svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="%231d9bf0"><g><path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"></path></g></svg>');
+        }
+
+        /* Special styling for single tweets */
+        .single-tweet {
+            display: block; /* Change from flex to block */
+            padding: 12px 24px 12px 16px;
+        }
+        
+        .single-tweet .tweet-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px; /* More space below header for single tweets */
+        }
+        
+        .single-tweet .tweet-header .avatar {
+            width: 48px;
+            height: 48px;
+            margin-right: 12px;
+        }
+        
+        /* Hide the avatar-column in single tweets */
+        .single-tweet .avatar-column {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+{% macro format_count(count) %}
+    {% if count is none or count == 0 %}
+        {# Return non-breaking space for zero or none values to maintain alignment #}
+        &nbsp;
+    {% elif count >= 1000000 %}
+        {{ "%.1f"|format(count/1000000)|replace('.0', '') }}M
+    {% elif count >= 1000 %}
+        {{ "%.1f"|format(count/1000)|replace('.0', '') }}K
+    {% else %}
+        {{ count }}
+    {% endif %}
+{% endmacro %}
+
+{% macro render_tweet_macro(tweet_item, is_quoted_tweet=False, is_last_in_thread=False, is_single_tweet=False, show_connector_on_last=False) %}
+    {% if is_quoted_tweet %}
+    <div class="tweet quoted-tweet">
+        <div class="tweet-content">
+            <div class="tweet-header">
+                <img src="{{ tweet_item.user_avatar_url }}" alt="{{ tweet_item.username }} avatar" class="avatar">
+                <div class="user-info">
+                    <span class="username">{{ tweet_item.username }}</span>
+                    <span class="user-handle-timestamp">
+                        @{{ tweet_item.username }}
+                        {% if tweet_item.created_at %}
+                            <span class="timestamp">{{ tweet_item.created_at.strftime('%b %d') if tweet_item.created_at else '' }}</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="tweet-body-content">
+                <p class="tweet-text">{{ tweet_item.text }}</p>
+
+                {% if tweet_item.media %}
+                    {% set media_count = tweet_item.media | length %}
+                    {% set media_class = 'media-count-' + ((media_count|string) if media_count <= 4 else 'many') %}
+                    <div class="tweet-media {{ media_class }}">
+                        {% for media_item in tweet_item.media %}
+                            {% if media_item.type == 'image' %}
+                                <img src="{{ media_item.url }}" alt="Tweet image">
+                            {% elif media_item.type == 'video' %}
+                                <img src="{{ media_item.preview_url }}" alt="Tweet video preview">
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if tweet_item.quoted_tweet %}
+                <div class="quoted-tweet-container">
+                    {{ render_tweet_macro(tweet_item.quoted_tweet, is_quoted_tweet=True, is_last_in_thread=True) }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="tweet {% if is_single_tweet %}single-tweet{% endif %}">
+        <div class="avatar-column">
+            <img src="{{ tweet_item.user_avatar_url }}" alt="{{ tweet_item.username }} avatar" class="avatar">
+            {# Show connector if it's NOT the last in thread OR if show_connector_on_last is true and it IS the last #}
+            {% if not is_last_in_thread or (is_last_in_thread and show_connector_on_last) %}
+                <div class="thread-connector"></div>
+            {% endif %}
+        </div>
+        <div class="tweet-content">
+            <div class="tweet-header">
+                {% if is_single_tweet %}
+                <img src="{{ tweet_item.user_avatar_url }}" alt="{{ tweet_item.username }} avatar" class="avatar">
+                {% endif %}
+                <div class="user-info">
+                    <span class="username">{{ tweet_item.username }}</span>
+                    <span class="user-handle-timestamp">
+                        @{{ tweet_item.username }}
+                        {% if tweet_item.created_at %}
+                            <span class="timestamp">{{ tweet_item.created_at.strftime('%b %d') if tweet_item.created_at else '' }}</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="tweet-body-content">
+                <p class="tweet-text">{{ tweet_item.text }}</p>
+
+                {% if tweet_item.media %}
+                    {% set media_count = tweet_item.media | length %}
+                    {% set media_class = 'media-count-' + ((media_count|string) if media_count <= 4 else 'many') %}
+                    <div class="tweet-media {{ media_class }}">
+                        {% for media_item in tweet_item.media %}
+                            {% if media_item.type == 'image' %}
+                                <img src="{{ media_item.url }}" alt="Tweet image">
+                            {% elif media_item.type == 'video' %}
+                                <img src="{{ media_item.preview_url }}" alt="Tweet video preview">
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if tweet_item.quoted_tweet %}
+                <div class="quoted-tweet-container">
+                    {{ render_tweet_macro(tweet_item.quoted_tweet, is_quoted_tweet=True, is_last_in_thread=True) }}
+                </div>
+            {% endif %}
+
+            <div class="tweet-footer">
+                <span><span class="icon-reply"></span>{{ format_count(tweet_item.replies | default(0)) }}</span>
+                <span><span class="icon-retweet"></span>{{ format_count(tweet_item.retweets | default(0)) }}</span>
+                <span><span class="icon-like"></span>{{ format_count(tweet_item.likes | default(0)) }}</span>
+                <span><span class="icon-views"></span>{{ format_count(tweet_item.views | default(0)) }}</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endmacro %}
+
+<div class="thread-container">
+    {% for tweet in thread %}
+        {# Pass show_connector_on_last from the context, default to false if not provided #}
+        {{ render_tweet_macro(tweet, is_quoted_tweet=False, is_last_in_thread=loop.last, is_single_tweet=((is_single_tweet|default(false)) or (thread|length == 1)), show_connector_on_last=show_connector_on_last|default(false)) }}
+    {% endfor %}
+</div>
+
+</body>
+</html>
