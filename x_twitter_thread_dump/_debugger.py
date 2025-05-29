@@ -17,7 +17,7 @@ async def get_tweet(
 ) -> HTMLResponse:
     async with x_twitter_thread_dump_async_client() as client:
         thread = await client.get_thread(tweet_id)
-        await client._download_previews(thread)
+        await client._download_previews(thread)  # noqa: SLF001
 
     html = render_thread_html(
         thread,

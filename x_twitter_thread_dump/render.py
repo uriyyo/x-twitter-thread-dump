@@ -1,5 +1,6 @@
-import pathlib
 import base64
+import pathlib
+
 import jinja2
 
 from .entities import Thread

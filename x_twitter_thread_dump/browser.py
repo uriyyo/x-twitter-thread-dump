@@ -12,14 +12,14 @@ MOBILE_CONFIG = {
 }
 
 BROWSER_RUN_ARGS = [
-    '--disable-gpu',
-    '--disable-dev-shm-usage',
-    '--disable-setuid-sandbox',
-    '--no-sandbox',
-    '--js-flags=--expose-gc,--max-old-space-size=500',  # Limit JS heap to 500MB
-    '--single-process',
-    '--disable-extensions',
-    '--disable-component-extensions-with-background-pages',
+    "--disable-gpu",
+    "--disable-dev-shm-usage",
+    "--disable-setuid-sandbox",
+    "--no-sandbox",
+    "--js-flags=--expose-gc,--max-old-space-size=500",  # Limit JS heap to 500MB
+    "--single-process",
+    "--disable-extensions",
+    "--disable-component-extensions-with-background-pages",
 ]
 
 

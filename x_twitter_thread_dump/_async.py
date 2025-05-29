@@ -73,6 +73,7 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
         *,
         tweets_per_image: None = None,
         mobile: bool = False,
+        sequential: bool = False,
     ) -> Image:
         pass
 
@@ -83,6 +84,7 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
         *,
         tweets_per_image: int,
         mobile: bool = False,
+        sequential: bool = False,
     ) -> list[Image]:
         pass
 
@@ -92,6 +94,7 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
         *,
         tweets_per_image: int | None = None,
         mobile: bool = False,
+        sequential: bool = False,
     ) -> list[Image] | Image:
         await self._download_previews(thread)
 
@@ -102,8 +105,12 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
 
         match result:
             case [*htmls]:
-                imgs = await gather(*[html_to_image_async(html, mobile=mobile) for html in htmls])
+                if sequential:
+                    imgs = [await html_to_image_async(html, mobile=mobile) for html in htmls]
+                else:
+                    imgs = await gather(*[html_to_image_async(html, mobile=mobile) for html in htmls])
                 return [*imgs]
+
             case html:
                 return await html_to_image_async(cast(str, html), mobile=mobile)
 
