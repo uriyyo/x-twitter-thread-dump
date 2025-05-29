@@ -7,9 +7,20 @@ from .images import bytes_to_image
 MOBILE_CONFIG = {
     "color_scheme": "dark",
     "viewport": {"width": 500, "height": 400},
-    "device_scale_factor": 3,
+    "device_scale_factor": 2,
     "is_mobile": True,
 }
+
+BROWSER_RUN_ARGS = [
+    '--disable-gpu',
+    '--disable-dev-shm-usage',
+    '--disable-setuid-sandbox',
+    '--no-sandbox',
+    '--js-flags=--expose-gc,--max-old-space-size=500',  # Limit JS heap to 500MB
+    '--single-process',
+    '--disable-extensions',
+    '--disable-component-extensions-with-background-pages',
+]
 
 
 def html_to_image(
@@ -23,6 +34,7 @@ def html_to_image(
         browser = p.chromium.launch(
             headless=headless,
             channel="chrome",
+            args=BROWSER_RUN_ARGS,
         )
         ctx = browser.new_context(**(MOBILE_CONFIG if mobile else {}))  # type: ignore[arg-type]
 
@@ -47,6 +59,7 @@ async def html_to_image_async(
         browser = await p.chromium.launch(
             headless=headless,
             channel="chrome",
+            args=BROWSER_RUN_ARGS,
         )
         ctx = await browser.new_context(**(MOBILE_CONFIG if mobile else {}))  # type: ignore[arg-type]
 
