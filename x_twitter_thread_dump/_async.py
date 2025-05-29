@@ -1,4 +1,5 @@
 from asyncio import gather
+from collections import defaultdict
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -92,6 +93,8 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
         tweets_per_image: int | None = None,
         mobile: bool = False,
     ) -> list[Image] | Image:
+        await self._download_previews(thread)
+
         result = self._thread_to_html_chunks(
             thread,
             tweets_per_image=tweets_per_image,
@@ -103,6 +106,23 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
                 return [*imgs]
             case html:
                 return await html_to_image_async(cast(str, html), mobile=mobile)
+
+    async def _download_previews(self, thread: Thread, /) -> None:
+        medias = [media for tweet in thread for media in tweet.all_preview_media()]
+
+        urls = defaultdict(list)
+        for media in medias:
+            urls[media.preview_url].append(media)
+
+        async def _worker(url: str, /) -> None:
+            async with self.client.stream("GET", url) as response:
+                response.raise_for_status()
+                content = await response.aread()
+
+                for media in urls[url]:
+                    media.raw_preview_bytes = content
+
+        await gather(*[_worker(url) for url in urls])
 
 
 @asynccontextmanager

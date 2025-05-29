@@ -16,6 +16,7 @@ class Media:
     type: Literal["image", "video"]
 
     raw_data: AnyDict | None = None
+    raw_preview_bytes: bytes | None = None
 
     @classmethod
     def from_raw_response(cls, raw_data: AnyDict, /) -> Self:
@@ -74,12 +75,46 @@ def _prepare_user_avatar_url(url: str, /) -> str:
 
 
 @dataclass(kw_only=True)
-class Tweet:
+class User:
     id: str
     username: str
-    user_id: str
-    user_avatar_url: str
+    avatar: Media | None = None
+
+    raw_data: AnyDict | None = None
+
+    @classmethod
+    def from_raw_response(cls, raw_data: AnyDict, /) -> Self:
+        match raw_data:
+            case {
+                "rest_id": id_,
+                "core": {
+                    "screen_name": username,
+                },
+                "avatar": {
+                    "image_url": avatar_url,
+                },
+            }:
+                avatar_url = _prepare_user_avatar_url(avatar_url)
+
+                return cls(
+                    id=id_,
+                    username=username,
+                    avatar=Media(
+                        url=avatar_url,
+                        preview_url=avatar_url,
+                        type="image",
+                    ),
+                    raw_data=raw_data,
+                )
+            case _:
+                raise ValueError("Invalid raw data format for User")
+
+
+@dataclass(kw_only=True)
+class Tweet:
+    id: str
     text: str
+    user: User
 
     likes: int = 0
     quotes: int = 0
@@ -101,6 +136,15 @@ class Tweet:
         if self.quoted_tweet:
             yield from self.quoted_tweet.all_media()
 
+    def all_preview_media(self) -> Iterable[Media]:
+        yield from self.all_media()
+
+        if self.user.avatar:
+            yield self.user.avatar
+
+        if self.quoted_tweet and self.quoted_tweet.user.avatar:
+            yield self.quoted_tweet.user.avatar
+
     @classmethod
     def _parse_tweet_result(cls, result: AnyDict, /) -> Self:
         match result:
@@ -109,15 +153,7 @@ class Tweet:
                     "rest_id": id_,
                     "core": {
                         "user_results": {
-                            "result": {
-                                "rest_id": user_id,
-                                "core": {
-                                    "screen_name": username,
-                                },
-                                "avatar": {
-                                    "image_url": user_avatar_url,
-                                },
-                            },
+                            "result": {**user_data},
                         },
                     },
                     "legacy": {
@@ -162,9 +198,7 @@ class Tweet:
 
                 return cls(
                     id=id_,
-                    username=username,
-                    user_id=user_id,
-                    user_avatar_url=_prepare_user_avatar_url(user_avatar_url),
+                    user=User.from_raw_response(cast(AnyDict, user_data)),
                     text=_preprocess_full_text(text),
                     parent_id=parent_id,
                     quotes=int(quotes),

@@ -276,16 +276,24 @@
     {% endif %}
 {% endmacro %}
 
+{% macro render_media_src(media_item) %}
+    {% if media_item.raw_preview_bytes and media_item.raw_preview_bytes | length > 0 %}
+        data:image/jpeg;base64,{{ media_item.raw_preview_bytes | b64encode | string }}
+    {% else %}
+        {{ media_item.preview_url }}
+    {% endif %}
+{% endmacro %}
+
 {% macro render_tweet_macro(tweet_item, is_quoted_tweet=False, is_last_in_thread=False, is_single_tweet=False, show_connector_on_last=False) %}
     {% if is_quoted_tweet %}
     <div class="tweet quoted-tweet">
         <div class="tweet-content">
             <div class="tweet-header">
-                <img src="{{ tweet_item.user_avatar_url }}" alt="{{ tweet_item.username }} avatar" class="avatar">
+                <img src="{{ render_media_src(tweet_item.user.avatar) }}" alt="{{ tweet_item.user.username }} avatar" class="avatar">
                 <div class="user-info">
                     <span class="username">{{ tweet_item.username }}</span>
                     <span class="user-handle-timestamp">
-                        @{{ tweet_item.username }}
+                        @{{ tweet_item.user.username }}
                         {% if tweet_item.created_at %}
                             <span class="dot-separator">·</span>
                             <span class="timestamp">{{ tweet_item.created_at.strftime('%b %d') if tweet_item.created_at else '' }}</span>
@@ -302,11 +310,7 @@
                     {% set media_class = 'media-count-' + ((media_count|string) if media_count <= 4 else 'many') %}
                     <div class="tweet-media {{ media_class }}">
                         {% for media_item in tweet_item.media %}
-                            {% if media_item.type == 'image' %}
-                                <img src="{{ media_item.url }}" alt="Tweet image">
-                            {% elif media_item.type == 'video' %}
-                                <img src="{{ media_item.preview_url }}" alt="Tweet video preview">
-                            {% endif %}
+                            <img src="{{ render_media_src(media_item) }}" alt="Tweet image">
                         {% endfor %}
                     </div>
                 {% endif %}
@@ -322,7 +326,7 @@
     {% else %}
     <div class="tweet {% if is_single_tweet %}single-tweet{% endif %}">
         <div class="avatar-column">
-            <img src="{{ tweet_item.user_avatar_url }}" alt="{{ tweet_item.username }} avatar" class="avatar">
+            <img src="{{ render_media_src(tweet_item.user.avatar) }}" alt="{{ tweet_item.user.username }} avatar" class="avatar">
             {# Show connector if it's NOT the last in thread OR if show_connector_on_last is true and it IS the last #}
             {% if not is_last_in_thread or (is_last_in_thread and show_connector_on_last) %}
                 <div class="thread-connector"></div>
@@ -331,12 +335,12 @@
         <div class="tweet-content">
             <div class="tweet-header">
                 {% if is_single_tweet %}
-                <img src="{{ tweet_item.user_avatar_url }}" alt="{{ tweet_item.username }} avatar" class="avatar">
+                <img src="{{ render_media_src(tweet_item.user.avatar) }}" alt="{{ tweet_item.user.username }} avatar" class="avatar">
                 {% endif %}
                 <div class="user-info">
                     <span class="username">{{ tweet_item.username }}</span>
                     <span class="user-handle-timestamp">
-                        @{{ tweet_item.username }}
+                        @{{ tweet_item.user.username }}
                         {% if tweet_item.created_at %}
                             <span class="dot-separator">·</span>
                             <span class="timestamp">{{ tweet_item.created_at.strftime('%b %d') if tweet_item.created_at else '' }}</span>
@@ -353,11 +357,7 @@
                     {% set media_class = 'media-count-' + ((media_count|string) if media_count <= 4 else 'many') %}
                     <div class="tweet-media {{ media_class }}">
                         {% for media_item in tweet_item.media %}
-                            {% if media_item.type == 'image' %}
-                                <img src="{{ media_item.url }}" alt="Tweet image">
-                            {% elif media_item.type == 'video' %}
-                                <img src="{{ media_item.preview_url }}" alt="Tweet video preview">
-                            {% endif %}
+                            <img src="{{ render_media_src(media_item) }}" alt="Tweet image">
                         {% endfor %}
                     </div>
                 {% endif %}

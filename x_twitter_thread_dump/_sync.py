@@ -1,3 +1,4 @@
+from collections import defaultdict
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -91,6 +92,8 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
         tweets_per_image: int | None = None,
         mobile: bool = False,
     ) -> list[Image] | Image:
+        self._download_previews(thread)
+
         result = self._thread_to_html_chunks(
             thread,
             tweets_per_image=tweets_per_image,
@@ -101,6 +104,24 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
                 return [html_to_image(html, mobile=mobile) for html in htmls]
             case html:
                 return html_to_image(cast(str, html), mobile=mobile)
+
+    def _download_previews(self, thread: Thread) -> None:
+        medias = [media for tweet in thread for media in tweet.all_preview_media()]
+
+        urls = defaultdict(list)
+        for media in medias:
+            urls[media.preview_url].append(media)
+
+        def _worker(url: str, /) -> None:
+            with self.client.stream("GET", url) as response:
+                response.raise_for_status()
+                content = response.read()
+
+                for media in urls[url]:
+                    media.raw_preview_bytes = content
+
+        for _url in urls:
+            _worker(_url)
 
 
 @contextmanager

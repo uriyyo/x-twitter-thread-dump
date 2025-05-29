@@ -1,5 +1,5 @@
 import pathlib
-
+import base64
 import jinja2
 
 from .entities import Thread
@@ -10,6 +10,7 @@ jinja2_env = jinja2.Environment(
     ),
     autoescape=jinja2.select_autoescape(["html", "xml"]),
 )
+jinja2_env.filters["b64encode"] = lambda x: base64.b64encode(x).decode("utf-8")
 
 
 def render_thread_html(
