@@ -69,10 +69,20 @@
         .user-handle-timestamp {
             color: #71767b; /* Dark mode secondary text */
             font-size: 1em; /* Increased from 0.9375em */
+            display: flex;
+            align-items: center;
+            gap: 2px; /* Reduced from 4px to bring elements closer together */
+        }
+        .timestamp {
+            margin-left: 0; /* Remove margin as we now use a separate span for the dot */
         }
         .timestamp::before {
-            content: "·";
-            margin: 0 4px;
+            content: none; /* Remove the pseudo-element dot */
+        }
+        .dot-separator {
+            margin: 0 2px; /* Reduced from 0 4px */
+            color: #71767b; /* Match Twitter's dot color */
+            font-size: 1.2em; /* Make the dot bigger */
         }
         .tweet-text {
             white-space: pre-wrap;
@@ -277,6 +287,7 @@
                     <span class="user-handle-timestamp">
                         @{{ tweet_item.username }}
                         {% if tweet_item.created_at %}
+                            <span class="dot-separator">·</span>
                             <span class="timestamp">{{ tweet_item.created_at.strftime('%b %d') if tweet_item.created_at else '' }}</span>
                         {% endif %}
                     </span>
@@ -327,6 +338,7 @@
                     <span class="user-handle-timestamp">
                         @{{ tweet_item.username }}
                         {% if tweet_item.created_at %}
+                            <span class="dot-separator">·</span>
                             <span class="timestamp">{{ tweet_item.created_at.strftime('%b %d') if tweet_item.created_at else '' }}</span>
                         {% endif %}
                     </span>
