@@ -65,6 +65,14 @@ def _preprocess_full_text(full_text: str, /) -> str:
     return _remove_last_link(full_text)
 
 
+def _prepare_user_avatar_url(url: str, /) -> str:
+    # we need to use better quality avatar
+    if url.endswith("_normal.jpg"):
+        return url.removesuffix("_normal.jpg") + "_200x200.jpg"
+
+    return url
+
+
 @dataclass(kw_only=True)
 class Tweet:
     id: str
@@ -156,7 +164,7 @@ class Tweet:
                     id=id_,
                     username=username,
                     user_id=user_id,
-                    user_avatar_url=user_avatar_url,
+                    user_avatar_url=_prepare_user_avatar_url(user_avatar_url),
                     text=_preprocess_full_text(text),
                     parent_id=parent_id,
                     quotes=int(quotes),
