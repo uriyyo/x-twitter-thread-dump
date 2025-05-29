@@ -61,13 +61,14 @@
         .username {
             font-weight: bold;
             color: #e7e9ea; /* Dark mode text */
+            font-size: 1.05em; /* Increased from default size */
         }
         .username:hover {
             text-decoration: underline;
         }
         .user-handle-timestamp {
             color: #71767b; /* Dark mode secondary text */
-            font-size: 0.9375em;
+            font-size: 1em; /* Increased from 0.9375em */
         }
         .timestamp::before {
             content: "·";
@@ -76,7 +77,7 @@
         .tweet-text {
             white-space: pre-wrap;
             word-wrap: break-word;
-            font-size: 0.9375em;
+            font-size: 1.05em; /* Increased from 0.9375em */
             line-height: 1.3125;
             margin-top: 2px; /* Added small top margin instead */
             margin-bottom: 12px;
@@ -150,8 +151,8 @@
             height: 20px;
             margin-right: 8px;
         }
-        .quoted-tweet .username { font-size: 0.9em; }
-        .quoted-tweet .tweet-text { font-size: 0.9em; margin-bottom: 8px; }
+        .quoted-tweet .username { font-size: 1em; } /* Increased from 0.9em */
+        .quoted-tweet .tweet-text { font-size: 1em; margin-bottom: 8px; } /* Increased from 0.9em */
         .quoted-tweet .tweet-media { margin-bottom: 8px; border-radius: 12px; }
         .quoted-tweet .tweet-footer { display: none; }
 
@@ -159,7 +160,7 @@
             display: flex;
             justify-content: space-between; /* Changed from space-around to space-between */
             color: #71767b; /* Dark mode secondary text */
-            font-size: 0.8125em;
+            font-size: 0.9em; /* Increased from 0.8125em */
             padding-top: 8px;
             width: 100%; /* Changed from max-width: 425px to width: 100% */
         }
@@ -180,11 +181,11 @@
         .icon-reply::before, .icon-retweet::before, .icon-like::before, .icon-views::before {
             content: "";
             display: inline-block;
-            width: 18px;
-            height: 18px;
+            width: 22px; /* Increased from 18px */
+            height: 22px; /* Increased from 18px */
             background-repeat: no-repeat;
             background-position: center;
-            background-size: 18px;
+            background-size: 22px; /* Increased from 18px */
         }
 
         .icon-reply::before {
@@ -370,7 +371,7 @@
 <div class="thread-container">
     {% for tweet in thread %}
         {# Pass show_connector_on_last from the context, default to false if not provided #}
-        {{ render_tweet_macro(tweet, is_quoted_tweet=False, is_last_in_thread=loop.last, is_single_tweet=((is_single_tweet|default(false)) or (thread|length == 1)), show_connector_on_last=show_connector_on_last|default(false)) }}
+        {{ render_tweet_macro(tweet, is_quoted_tweet=False, is_last_in_thread=loop.last, is_single_tweet=(is_single_tweet|default(false)), show_connector_on_last=show_connector_on_last|default(false)) }}
     {% endfor %}
 </div>
 

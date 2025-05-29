@@ -13,7 +13,7 @@ app = FastAPI()
 async def get_tweet(
     tweet_id: str,
     *,
-    show_connector_on_last: Annotated[bool, Query()] = True,
+    show_connector_on_last: Annotated[bool, Query()] = False,
 ) -> HTMLResponse:
     async with x_twitter_thread_dump_async_client() as client:
         thread = await client.get_thread(tweet_id)

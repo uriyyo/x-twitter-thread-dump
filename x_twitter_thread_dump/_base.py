@@ -44,7 +44,10 @@ class BaseXTwitterThreadDumpClient:
         tweets_per_image: int | None = None,
     ) -> str | list[str]:
         if tweets_per_image is None:
-            return render_thread_html(thread)
+            return render_thread_html(
+                thread,
+                is_single_tweet=False,
+            )
 
         chunks = [[*chunk] for chunk in divide(math.ceil(len(thread) / tweets_per_image), thread)]
 
