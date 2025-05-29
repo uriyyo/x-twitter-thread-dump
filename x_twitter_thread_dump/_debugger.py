@@ -9,7 +9,7 @@ from x_twitter_thread_dump.render import render_thread_html
 app = FastAPI()
 
 
-@app.get("/debug/tweet/{tweet_id}")
+@app.get("/{tweet_id}")
 async def get_tweet(
     tweet_id: str,
     *,
@@ -17,6 +17,7 @@ async def get_tweet(
 ) -> HTMLResponse:
     async with x_twitter_thread_dump_async_client() as client:
         thread = await client.get_thread(tweet_id)
+        await client._download_previews(thread)
 
     html = render_thread_html(
         thread,

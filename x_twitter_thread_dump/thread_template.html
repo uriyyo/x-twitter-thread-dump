@@ -113,14 +113,30 @@
             object-fit: cover;
         }
         
-        /* Single media - display at full height */
+        /* Single media - preserve aspect ratio without height restriction */
         .tweet-media.media-count-1 { 
-            grid-template-columns: 1fr; 
-            max-height: 510px; /* Twitter's max height */
+            grid-template-columns: 1fr;
+            max-height: none; /* Remove height restriction */
         }
         .tweet-media.media-count-1 img, .tweet-media.media-count-1 video {
             object-fit: contain; /* Preserve aspect ratio without cropping */
+            max-width: 100%; /* Ensure it doesn't exceed container width */
             background-color: #000; /* For images that don't fill the container */
+        }
+        
+        /* Allow single videos to maintain their natural aspect ratio */
+        .tweet-media.media-count-1 .media-wrapper {
+            width: 100%;
+            height: auto; /* Let height be determined by content */
+            min-height: auto; /* Remove minimum height */
+            max-height: none; /* Remove maximum height */
+        }
+        
+        .tweet-media.media-count-1 .media-wrapper img {
+            width: 100%;
+            height: auto; /* Let height adjust based on aspect ratio */
+            object-fit: contain;
+            background-color: #000;
         }
         
         .tweet-media.media-count-2 { grid-template-columns: 1fr 1fr; aspect-ratio: 2/1; }
@@ -259,6 +275,38 @@
         .single-tweet .avatar-column {
             display: none;
         }
+
+        /* Play button for videos */
+        .media-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .play-button-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+        
+        .play-button-overlay::before {
+            content: "";
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-left: 18px solid white;
+            margin-left: 4px; /* Slight offset to center visually */
+        }
     </style>
 </head>
 <body>
@@ -310,7 +358,14 @@
                     {% set media_class = 'media-count-' + ((media_count|string) if media_count <= 4 else 'many') %}
                     <div class="tweet-media {{ media_class }}">
                         {% for media_item in tweet_item.media %}
-                            <img src="{{ render_media_src(media_item) }}" alt="Tweet image">
+                            {% if media_item.type == 'video' %}
+                                <div class="media-wrapper">
+                                    <img src="{{ render_media_src(media_item) }}" alt="Tweet video">
+                                    <div class="play-button-overlay"></div>
+                                </div>
+                            {% else %}
+                                <img src="{{ render_media_src(media_item) }}" alt="Tweet image">
+                            {% endif %}
                         {% endfor %}
                     </div>
                 {% endif %}
@@ -357,7 +412,14 @@
                     {% set media_class = 'media-count-' + ((media_count|string) if media_count <= 4 else 'many') %}
                     <div class="tweet-media {{ media_class }}">
                         {% for media_item in tweet_item.media %}
-                            <img src="{{ render_media_src(media_item) }}" alt="Tweet image">
+                            {% if media_item.type == 'video' %}
+                                <div class="media-wrapper">
+                                    <img src="{{ render_media_src(media_item) }}" alt="Tweet video">
+                                    <div class="play-button-overlay"></div>
+                                </div>
+                            {% else %}
+                                <img src="{{ render_media_src(media_item) }}" alt="Tweet image">
+                            {% endif %}
                         {% endfor %}
                     </div>
                 {% endif %}
