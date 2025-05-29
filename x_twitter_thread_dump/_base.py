@@ -54,7 +54,7 @@ class BaseXTwitterThreadDumpClient:
         return [
             render_thread_html(
                 chunk,
-                is_single_tweet=len(thread) == 1,
+                is_single_tweet=False,
                 show_connector_on_last=chunk is not chunks[-1],
             )
             for chunk in chunks
