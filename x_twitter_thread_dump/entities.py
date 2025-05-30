@@ -77,7 +77,10 @@ def _prepare_user_avatar_url(url: str, /) -> str:
 @dataclass(kw_only=True)
 class User:
     id: str
+    name: str
     username: str
+    is_verified: bool = False
+    is_blue_verified: bool = False
     avatar: Media | None = None
 
     raw_data: AnyDict | None = None
@@ -88,17 +91,25 @@ class User:
             case {
                 "rest_id": id_,
                 "core": {
+                    "name": name,
                     "screen_name": username,
                 },
                 "avatar": {
                     "image_url": avatar_url,
+                },
+                "is_blue_verified": is_blue_verified,
+                "verification": {
+                    "verified": is_verified,
                 },
             }:
                 avatar_url = _prepare_user_avatar_url(avatar_url)
 
                 return cls(
                     id=id_,
+                    name=name,
                     username=username,
+                    is_verified=is_verified,
+                    is_blue_verified=is_blue_verified,
                     avatar=Media(
                         url=avatar_url,
                         preview_url=avatar_url,
@@ -209,6 +220,7 @@ class Tweet:
                     created_at=datetime.strptime(created_at, "%a %b %d %H:%M:%S %z %Y") if created_at else None,
                     media=media,
                     quoted_tweet=quoted_tweet,
+                    raw_data=result,
                 )
             case _:
                 raise ValueError("Invalid raw data format for Tweet")

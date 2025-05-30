@@ -17,8 +17,18 @@ from .entities import Thread, Tweet
 from .utils import alimited, parse_guest_token, response_to_bs4
 
 
-async def _get_client_transaction_client() -> ClientTransaction:
-    async with AsyncClient(headers=generate_headers()) as client:
+async def _get_client_transaction_client(
+    *,
+    timeout: float | None = None,
+    retries: int | None = None,
+) -> ClientTransaction:
+    async with AsyncClient(
+        headers=generate_headers(),
+        timeout=timeout or DEFAULT_TIMEOUT,
+        transport=AsyncHTTPTransport(
+            retries=retries or DEFAULT_RETRIES,
+        ),
+    ) as client:
         home_page = await client.get(url="https://x.com")
         home_page_response = response_to_bs4(home_page)
 
@@ -51,7 +61,9 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
         limit: int | None = None,
     ) -> Thread:
         thread = [tweet async for tweet in alimited(self._iter_thread(tweet_id), limit=limit)]
-        return [*reversed(thread)]
+        thread.reverse()
+
+        return thread
 
     async def _get_tweet(self, tweet_id: str, /) -> Tweet:
         response = await self.client.get(**self._prepare_get_tweet_request(tweet_id))
@@ -96,7 +108,7 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
         mobile: bool = False,
         sequential: bool = False,
     ) -> list[Image] | Image:
-        await self._download_previews(thread)
+        await self.download_previews(thread)
 
         result = self._thread_to_html_chunks(
             thread,
@@ -114,8 +126,8 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
             case html:
                 return await html_to_image_async(cast(str, html), mobile=mobile)
 
-    async def _download_previews(self, thread: Thread, /) -> None:
-        medias = [media for tweet in thread for media in tweet.all_preview_media()]
+    async def download_previews(self, thread: Thread, /) -> None:
+        medias = [media for tweet in thread for media in tweet.all_preview_media() if not media.raw_preview_bytes]
 
         urls = defaultdict(list)
         for media in medias:
@@ -150,7 +162,10 @@ async def x_twitter_thread_dump_async_client(
             retries=retries or DEFAULT_RETRIES,
         ),
     ) as client:
-        transaction_client = await _get_client_transaction_client()
+        transaction_client = await _get_client_transaction_client(
+            timeout=timeout,
+            retries=retries,
+        )
 
         guest_token = await _get_guest_token(client)
         client.headers["x-guest-token"] = guest_token

@@ -16,8 +16,18 @@ from .entities import Thread, Tweet
 from .utils import limited, parse_guest_token, response_to_bs4
 
 
-def _get_client_transaction_client() -> ClientTransaction:
-    with Client(headers=generate_headers()) as client:
+def _get_client_transaction_client(
+    *,
+    timeout: float | None = None,
+    retries: int | None = None,
+) -> ClientTransaction:
+    with Client(
+        headers=generate_headers(),
+        timeout=timeout or DEFAULT_TIMEOUT,
+        transport=HTTPTransport(
+            retries=retries or DEFAULT_RETRIES,
+        ),
+    ) as client:
         home_page = client.get(url="https://x.com")
         home_page_response = response_to_bs4(home_page)
 
@@ -50,7 +60,9 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
         limit: int | None = None,
     ) -> list[Tweet]:
         thread = [*limited(self._iter_thread(tweet_id), limit=limit)]
-        return [*reversed(thread)]
+        thread.reverse()
+
+        return thread
 
     def _get_tweet(self, tweet_id: str, /) -> Tweet:
         response = self.client.get(**self._prepare_get_tweet_request(tweet_id))
@@ -92,7 +104,7 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
         tweets_per_image: int | None = None,
         mobile: bool = False,
     ) -> list[Image] | Image:
-        self._download_previews(thread)
+        self.download_previews(thread)
 
         result = self._thread_to_html_chunks(
             thread,
@@ -105,8 +117,8 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
             case html:
                 return html_to_image(cast(str, html), mobile=mobile)
 
-    def _download_previews(self, thread: Thread) -> None:
-        medias = [media for tweet in thread for media in tweet.all_preview_media()]
+    def download_previews(self, thread: Thread, /) -> None:
+        medias = [media for tweet in thread for media in tweet.all_preview_media() if not media.raw_preview_bytes]
 
         urls = defaultdict(list)
         for media in medias:
@@ -142,7 +154,10 @@ def x_twitter_thread_dump_client(
             retries=retries or DEFAULT_RETRIES,
         ),
     ) as client:
-        transaction_client = _get_client_transaction_client()
+        transaction_client = _get_client_transaction_client(
+            timeout=timeout,
+            retries=retries,
+        )
 
         guest_token = _get_guest_token(client)
         client.headers["x-guest-token"] = guest_token
