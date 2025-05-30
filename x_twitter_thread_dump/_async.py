@@ -11,7 +11,7 @@ from x_client_transaction import ClientTransaction
 from x_client_transaction.utils import generate_headers, get_ondemand_file_url
 
 from ._base import BaseXTwitterThreadDumpClient
-from .browser import html_to_image_async
+from .browser import async_browser_ctx, html_to_image_async
 from .consts import DEFAULT_BEARER_TOKEN, DEFAULT_RETRIES, DEFAULT_TIMEOUT
 from .entities import Thread, Tweet
 from .utils import alimited, parse_guest_token, response_to_bs4
@@ -120,7 +120,9 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
                 if sequential:
                     imgs = [await html_to_image_async(html, mobile=mobile) for html in htmls]
                 else:
-                    imgs = await gather(*[html_to_image_async(html, mobile=mobile) for html in htmls])
+                    async with async_browser_ctx(mobile=mobile) as (_, ctx):
+                        imgs = await gather(*[html_to_image_async(html, ctx=ctx, mobile=mobile) for html in htmls])
+
                 return [*imgs]
 
             case html:

@@ -3,7 +3,6 @@ import pathlib
 import re
 
 import jinja2
-import re
 
 from .entities import Thread
 
