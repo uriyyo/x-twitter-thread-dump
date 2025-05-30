@@ -429,6 +429,14 @@
     {{- text | safe -}}
 {%- endmacro -%}
 
+{% macro format_username(username, max_length=15) %}
+    {%- if username|length > max_length -%}
+        {{ username[:max_length] }}...
+    {%- else -%}
+        {{ username }}
+    {%- endif -%}
+{% endmacro %}
+
 {% macro render_tweet_macro(tweet_item, is_quoted_tweet=False, is_last_in_thread=False, is_single_tweet=False, show_connector_on_last=False) %}
     {% if is_quoted_tweet %}
     <div class="tweet quoted-tweet">
@@ -445,7 +453,7 @@
                         {% endif %}
                     </div>
                     <span class="user-handle-timestamp">
-                        @{{ tweet_item.user.username }}
+                        @{{ format_username(tweet_item.user.username) }}
                         {% if tweet_item.created_at %}
                             <span class="dot-separator">·</span>
                             <span class="timestamp">{{ tweet_item.created_at.strftime('%b %d') if tweet_item.created_at else '' }}</span>
@@ -506,7 +514,7 @@
                         {% endif %}
                     </div>
                     <span class="user-handle-timestamp">
-                        @{{ tweet_item.user.username }}
+                        @{{ format_username(tweet_item.user.username) }}
                         {% if tweet_item.created_at %}
                             <span class="dot-separator">·</span>
                             <span class="timestamp">{{ tweet_item.created_at.strftime('%b %d') if tweet_item.created_at else '' }}</span>
