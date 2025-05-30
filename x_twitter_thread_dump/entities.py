@@ -121,6 +121,35 @@ class User:
                 raise ValueError("Invalid raw data format for User")
 
 
+def _parse_binding_values(binding_values: Iterable[AnyDict], /) -> Media | None:
+    def _is_img(val: AnyDict, /) -> bool:
+        match val:
+            case {"value": {"type": "IMAGE"}}:
+                return True
+            case _:
+                return False
+
+    def _img_size(val: AnyDict, /) -> int:
+        match val:
+            case {"value": {"type": "IMAGE", "image_value": {"width": int() as width, "height": int() as height}}}:
+                return width * height
+            case _:
+                return 0
+
+    binding_values = [v for v in binding_values if _is_img(v)]
+
+    match res := max(binding_values, key=_img_size, default=None):
+        case {"value": {"type": "IMAGE", "image_value": {"url": url}}}:
+            return Media(
+                url=url,
+                preview_url=url,
+                type="image",
+                raw_data=res,
+            )
+
+    return None
+
+
 @dataclass(kw_only=True)
 class Tweet:
     id: str
@@ -206,6 +235,11 @@ class Tweet:
                         media = [Media.from_raw_response(cast(AnyDict, m)) for m in _media]
                     case _:
                         media = []
+
+                match rest:
+                    case {"card": {"legacy": {"binding_values": [*binding_values]}}}:
+                        if img := _parse_binding_values(binding_values):
+                            media.append(img)
 
                 return cls(
                     id=id_,
