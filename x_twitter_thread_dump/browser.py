@@ -11,8 +11,8 @@ from .images import bytes_to_image
 
 MOBILE_CONFIG = {
     "color_scheme": "dark",
-    "viewport": {"width": 500, "height": 400},
-    "device_scale_factor": 1.5,
+    "viewport": {"width": 450, "height": 400},
+    "device_scale_factor": 2,
     "is_mobile": True,
 }
 
@@ -25,6 +25,8 @@ BROWSER_RUN_ARGS = [
     "--single-process",
     "--disable-extensions",
     "--disable-component-extensions-with-background-pages",
+    '--font-render-hinting=medium',
+    '--enable-font-antialiasing',
 ]
 
 
