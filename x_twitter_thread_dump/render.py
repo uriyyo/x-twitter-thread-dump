@@ -1,7 +1,9 @@
 import base64
 import pathlib
+import re
 
 import jinja2
+import re
 
 from .entities import Thread
 
@@ -12,6 +14,7 @@ jinja2_env = jinja2.Environment(
     autoescape=jinja2.select_autoescape(["html", "xml"]),
 )
 jinja2_env.filters["b64encode"] = lambda x: base64.b64encode(x).decode("utf-8")
+jinja2_env.filters["regex_replace"] = lambda s, pattern, replacement: re.sub(pattern, replacement, s)
 
 
 def render_thread_html(

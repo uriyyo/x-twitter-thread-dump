@@ -153,6 +153,16 @@
             margin-bottom: 12px;
         }
         
+        /* Styling for hashtags, links and mentions */
+        .tweet-text a, .tweet-text .hashtag, .tweet-text .mention {
+            color: #1d9bf0; /* Twitter blue */
+            text-decoration: none;
+        }
+        
+        .tweet-text a:hover, .tweet-text .hashtag:hover, .tweet-text .mention:hover {
+            text-decoration: underline;
+        }
+        
         /* Reduce spacing when there's no media after the text */
         .tweet-body-content > p.tweet-text:last-child {
             margin-bottom: 4px; /* Reduced from 12px to 4px when there's no media */
@@ -412,6 +422,13 @@
     {% endif %}
 {% endmacro %}
 
+{%- macro format_tweet_text(text) -%}
+    {%- set text = text | regex_replace("(#\\w+)", '<span class="hashtag">\\1</span>') -%}
+    {%- set text = text | regex_replace("(@\\w+)", '<span class="mention">\\1</span>') -%}
+    {%- set text = text | regex_replace("(https?://[\\w./?&=]+)", '<a href="\\1" target="_blank">\\1</a>') -%}
+    {{- text | safe -}}
+{%- endmacro -%}
+
 {% macro render_tweet_macro(tweet_item, is_quoted_tweet=False, is_last_in_thread=False, is_single_tweet=False, show_connector_on_last=False) %}
     {% if is_quoted_tweet %}
     <div class="tweet quoted-tweet">
@@ -438,7 +455,7 @@
             </div>
 
             <div class="tweet-body-content">
-                <p class="tweet-text">{{ tweet_item.text }}</p>
+                <p class="tweet-text">{{- format_tweet_text(tweet_item.text) -}}</p>
 
                 {% if tweet_item.media %}
                     {% set media_count = tweet_item.media | length %}
@@ -499,7 +516,7 @@
             </div>
 
             <div class="tweet-body-content">
-                <p class="tweet-text">{{ tweet_item.text }}</p>
+                <p class="tweet-text">{{- format_tweet_text(tweet_item.text) -}}</p>
 
                 {% if tweet_item.media %}
                     {% set media_count = tweet_item.media | length %}
