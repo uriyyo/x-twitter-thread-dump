@@ -19,8 +19,8 @@
             max-width: 600px;
             margin: auto;
             background-color: #000000; /* Dark mode background */
-            /*padding-top: 8px;*/
-            /*padding-bottom: 8px;*/
+            width: 100%;
+            box-sizing: border-box;
         }
         .tweet {
             padding: 10px 24px 4px 16px; /* Increased right padding from 16px to 24px */
@@ -50,25 +50,34 @@
         }
         .tweet-content {
             width: 100%;
+            min-width: 0; /* Allow proper sizing in flex context */
         }
         .tweet-header {
             display: flex;
             align-items: center;
             margin-bottom: 0px; /* Reduced from 2px to 0px */
+            width: 100%; /* Ensure full width */
+            overflow: hidden; /* Prevent overflow */
         }
         .user-info {
             display: flex;
-            flex-direction: row; /* Change to row to display everything in one line */
-            align-items: center; /* Center align the items vertically */
-            gap: 4px; /* Add small gap between elements */
-            width: 100%; /* Ensure it takes full width */
-            justify-content: start; /* Separate name and handle info */
+            flex-direction: row;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            justify-content: flex-start;
+            flex-wrap: nowrap;
+            overflow: hidden;
         }
 
         .name-with-badge {
             display: flex;
             align-items: center; /* Ensure vertical centering of name and badge */
-            flex-shrink: 0; /* Prevent shrinking */
+            flex-shrink: 1; /* Allow name to shrink */
+            min-width: 0; /* Allow proper sizing in flex context */
+            max-width: unset; /* Remove width limitation */
+            overflow: hidden; /* Prevent overflow */
+            margin-right: 4px; /* Add margin to separate from handle */
         }
 
         .display-name {
@@ -77,51 +86,11 @@
             font-size: 1em; /* Changed from 1.05em to match username size */
             line-height: 1.2; /* Add line height for better vertical alignment */
             margin-right: 2px; /* Add space between name and badge */
-        }
-
-        /* Verification badges */
-        .verified-badge {
-            display: inline-flex;
-            margin-left: 2px;
-            width: 18px; /* Increased from 16px */
-            height: 18px; /* Increased from 16px */
-            background-color: #1d9bf0; /* Twitter blue */
-            border-radius: 50%;
-            align-items: center;
-            justify-content: center;
-            vertical-align: middle;
-        }
-
-        .blue-verified-badge {
-            display: inline-flex;
-            margin-left: 2px;
-            width: 24px; /* Increased from 20px */
-            height: 24px; /* Increased from 20px */
-            align-items: center;
-            justify-content: center;
-            vertical-align: middle;
-        }
-
-        .verified-badge::before {
-            content: "";
-            display: block;
-            width: 12px; /* Increased from 10px */
-            height: 12px; /* Increased from 10px */
-            background-image: url('data:image/svg+xml,<svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="%23ffffff"><g><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"></path></g></svg>');
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: 12px; /* Increased from 10px */
-        }
-
-        .blue-verified-badge::before {
-            content: "";
-            display: block;
-            width: 18px; /* Increased from 14px */
-            height: 18px; /* Increased from 14px */
-            background-image: url('data:image/svg+xml,<svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="%231d9bf0"><g><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"></path></g></svg>');
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: 18px; /* Increased from 14px */
+            white-space: nowrap; /* Prevent wrapping */
+            overflow: hidden; /* Hide overflow */
+            text-overflow: ellipsis; /* Add ellipsis for long names */
+            max-width: 100%; /* Use percentage instead of fixed width */
+            min-width: 30px; /* Ensure at least space for 3 characters */
         }
 
         .user-handle-timestamp {
@@ -132,21 +101,38 @@
             gap: 2px; /* Reduced from 4px to bring elements closer together */
             line-height: 1.2; /* Match line height for consistent alignment */
             white-space: nowrap; /* Prevent wrapping */
-            flex-shrink: 1; /* Allow shrinking if needed */
-            text-align: right; /* Align to right */
+            flex-shrink: 0; /* Prevent username/timestamp from shrinking */
+            text-align: left; /* Changed from right to left */
+            overflow: hidden; /* Prevent overflow */
+            min-width: 0; /* Allow flexbox to calculate proper width */
         }
-        .timestamp {
-            margin-left: 0; /* Remove margin as we now use a separate span for the dot */
-            font-size: 0.95em; /* Adjusted from 0.9em to make date slightly bigger */
+
+        /* Add styles for username with truncation */
+        .user-handle {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px; /* Fixed width for usernames */
+            min-width: 30px; /* Ensure at least 3 characters are visible */
         }
-        .timestamp::before {
-            content: none; /* Remove the pseudo-element dot */
-        }
+
         .dot-separator {
-            margin: 0 2px; /* Reduced from 0 4px */
-            color: #71767b; /* Match Twitter's dot color */
-            font-size: 1.2em; /* Make the dot bigger */
+            margin: 0 2px; /* Add consistent margin around the separator */
         }
+
+        /* Adjust the quoted tweet header to handle long names */
+        .quoted-tweet .user-info {
+            flex-wrap: nowrap; /* Always keep on one line */
+        }
+
+        .quoted-tweet .name-with-badge {
+            flex-shrink: 1; /* Allow quoted tweet names to shrink */
+            margin-right: 4px;
+        }
+
+        .quoted-tweet .user-handle-timestamp {
+            flex-shrink: 0; /* Keep username fixed in quoted tweets */
+        }
+
         .tweet-text {
             white-space: pre-wrap;
             word-wrap: break-word;
@@ -400,6 +386,78 @@
             border-left: 18px solid white;
             margin-left: 4px; /* Slight offset to center visually */
         }
+
+        /* Add responsive styles with media queries */
+        @media (max-width: 480px) {
+            .thread-container {
+                padding: 0 8px;
+            }
+            
+            .tweet {
+                padding: 10px 16px 4px 12px; /* Reduce padding on smaller screens */
+            }
+            
+            /* Remove flex-wrap to prevent moving to next line */
+            .user-info {
+                flex-wrap: nowrap; /* Keep on same line even on small screens */
+            }
+            
+            .name-with-badge {
+                flex-shrink: 1; /* Continue to allow shrinking */
+                max-width: unset;
+            }
+            
+            .user-handle-timestamp {
+                flex-shrink: 0; /* Prevent shrinking at all screen sizes */
+            }
+            
+            .user-handle {
+                max-width: 80px; /* Fixed width on small screens */
+                min-width: 30px; /* Ensure at least space for 3 characters */
+            }
+            
+            .display-name {
+                max-width: 100%; /* Allow to take whatever space is left */
+                min-width: 30px; /* Ensure at least 3 characters are visible */
+            }
+        }
+        
+        @media (min-width: 481px) and (max-width: 600px) {
+            .user-handle {
+                max-width: 100px; /* Fixed width on medium screens */
+            }
+            
+            .display-name {
+                max-width: 100%; /* Allow to take available space */
+            }
+        }
+        
+        /* Quoted tweet needs special handling */
+        .quoted-tweet .user-info {
+            flex-wrap: nowrap; /* Always keep on one line */
+        }
+        
+        .quoted-tweet .name-with-badge {
+            flex-shrink: 1; /* Allow quoted tweet names to shrink */
+        }
+        
+        .quoted-tweet .user-handle-timestamp {
+            flex-shrink: 0; /* Keep username fixed in quoted tweets */
+        }
+        
+        @media (max-width: 480px) {
+            .quoted-tweet .user-info {
+                flex-wrap: nowrap; /* Keep on one line */
+            }
+            
+            .quoted-tweet .name-with-badge {
+                max-width: unset;
+            }
+            
+            .quoted-tweet .user-handle {
+                max-width: 70px; /* Fixed width for quoted tweets */
+            }
+        }
     </style>
 </head>
 <body>
@@ -432,14 +490,6 @@
     {{- text | safe -}}
 {%- endmacro -%}
 
-{% macro format_username(username, max_length=15) %}
-    {%- if username|length > max_length -%}
-        {{ username[:max_length] }}...
-    {%- else -%}
-        {{ username }}
-    {%- endif -%}
-{% endmacro %}
-
 {% macro render_tweet_macro(tweet_item, is_quoted_tweet=False, is_last_in_thread=False, is_single_tweet=False, show_connector_on_last=False) %}
     {% if is_quoted_tweet %}
     <div class="tweet quoted-tweet">
@@ -456,7 +506,7 @@
                         {% endif %}
                     </div>
                     <span class="user-handle-timestamp">
-                        @{{ format_username(tweet_item.user.username) }}
+                        <span class="user-handle">@{{ tweet_item.user.username }}</span>
                         {% if tweet_item.created_at %}
                             <span class="dot-separator">·</span>
                             <span class="timestamp">{{ tweet_item.created_at.strftime('%b %d') if tweet_item.created_at else '' }}</span>
@@ -517,7 +567,7 @@
                         {% endif %}
                     </div>
                     <span class="user-handle-timestamp">
-                        @{{ format_username(tweet_item.user.username) }}
+                        <span class="user-handle">@{{ tweet_item.user.username }}</span>
                         {% if tweet_item.created_at %}
                             <span class="dot-separator">·</span>
                             <span class="timestamp">{{ tweet_item.created_at.strftime('%b %d') if tweet_item.created_at else '' }}</span>
