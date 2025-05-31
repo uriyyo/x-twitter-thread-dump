@@ -1,9 +1,10 @@
 import base64
 import io
+from collections.abc import Iterator
 
 from PIL import Image
 
-from .types import Img
+from .types import ClientBoundingRect, Img
 
 
 def base64str_to_image(base64_str: str) -> Img:
@@ -26,8 +27,47 @@ def scale_image(image: Img, *, scale: float) -> Img:
     return image.resize(new_size, Image.Resampling.LANCZOS)
 
 
+def divide_images(
+    img: Img,
+    rects: list[ClientBoundingRect],
+    *,
+    max_chunk_height: int,
+) -> Iterator[Img]:
+    if len(rects) < 2:  # noqa: PLR2004
+        yield img
+        return
+
+    def _img_from_chunk() -> Img:
+        if not chunk:
+            return img
+
+        return img.crop(
+            (
+                chunk[0]["left"],
+                chunk[0]["top"],
+                chunk[-1]["right"],
+                chunk[-1]["bottom"],
+            )
+        )
+
+    first, *rest = rects
+    chunk = [first]
+
+    for rect in rest:
+        if chunk[-1]["bottom"] - chunk[0]["top"] > max_chunk_height:
+            yield _img_from_chunk()
+            chunk = [rect]
+        else:
+            chunk.append(rect)
+
+    if chunk:
+        yield _img_from_chunk()
+
+
 __all__ = [
     "base64str_to_image",
     "bytes_to_image",
+    "divide_images",
     "image_to_bytes",
+    "scale_image",
 ]

@@ -2,10 +2,8 @@ from collections import defaultdict
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import cast, overload
 
 from httpx import Client, HTTPTransport
-from PIL.Image import Image
 from x_client_transaction import ClientTransaction
 from x_client_transaction.utils import generate_headers, get_ondemand_file_url
 
@@ -13,6 +11,8 @@ from ._base import BaseXTwitterThreadDumpClient
 from .browser import html_to_image
 from .consts import DEFAULT_BEARER_TOKEN, DEFAULT_RETRIES, DEFAULT_TIMEOUT
 from .entities import Thread, Tweet
+from .render import render_thread_html
+from .types import Img
 from .utils import limited, parse_guest_token, response_to_bs4
 
 
@@ -77,45 +77,25 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
             yield tweet
             node = tweet.parent_id
 
-    @overload
-    def thread_to_image(
-        self,
-        thread: Thread,
-        *,
-        tweets_per_image: None = None,
-        mobile: bool = False,
-    ) -> Image:
-        pass
-
-    @overload
-    def thread_to_image(
-        self,
-        thread: Thread,
-        *,
-        tweets_per_image: int,
-        mobile: bool = False,
-    ) -> list[Image]:
-        pass
-
     def thread_to_image(
         self,
         thread: list[Tweet],
         *,
         tweets_per_image: int | None = None,
+        max_tweet_height: int | None = None,
         mobile: bool = False,
-    ) -> list[Image] | Image:
+    ) -> list[Img]:
         self.download_previews(thread)
 
-        result = self._thread_to_html_chunks(
-            thread,
-            tweets_per_image=tweets_per_image,
-        )
+        html = render_thread_html(thread)
+        img, rects = html_to_image(html, mobile=mobile)
 
-        match result:
-            case [*htmls]:
-                return [html_to_image(html, mobile=mobile) for html in htmls]
-            case html:
-                return html_to_image(cast(str, html), mobile=mobile)
+        return self._prepare_result_img(
+            img,
+            rects,
+            tweets_per_image=tweets_per_image,
+            max_tweet_height=max_tweet_height,
+        )
 
     def download_previews(self, thread: Thread, /) -> None:
         medias = [media for tweet in thread for media in tweet.all_preview_media() if not media.raw_preview_bytes]

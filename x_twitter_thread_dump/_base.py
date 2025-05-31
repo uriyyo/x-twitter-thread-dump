@@ -1,18 +1,15 @@
 from __future__ import annotations
 
 import json
-import math
 from copy import deepcopy
 from dataclasses import dataclass
 
-from more_itertools import divide
 from x_client_transaction import ClientTransaction
 from x_client_transaction.utils import generate_headers
 
 from .consts import TWEET_RESULT_BY_REST_ID_PARAMS, TWEET_RESULT_BY_REST_ID_PATH
-from .entities import Thread
-from .render import render_thread_html
-from .types import AnyDict
+from .images import divide_images
+from .types import AnyDict, ClientBoundingRect, Img
 
 
 @dataclass(kw_only=True)
@@ -36,29 +33,23 @@ class BaseXTwitterThreadDumpClient:
             },
         }
 
-    def _thread_to_html_chunks(
+    def _prepare_result_img(
         self,
-        thread: Thread,
-        /,
+        img: Img,
+        rects: list[ClientBoundingRect],
         *,
         tweets_per_image: int | None = None,
-    ) -> str | list[str]:
-        if tweets_per_image is None:
-            return render_thread_html(
-                thread,
-                is_single_tweet=False,
-            )
+        max_tweet_height: int | None = None,
+    ) -> list[Img]:
+        match (tweets_per_image, max_tweet_height):
+            case (tweets_per_image, None) if tweets_per_image:
+                average_height = sum(rect["height"] for rect in rects) // len(rects)
 
-        chunks = [[*chunk] for chunk in divide(math.ceil(len(thread) / tweets_per_image), thread)]
-
-        return [
-            render_thread_html(
-                chunk,
-                is_single_tweet=False,
-                show_connector_on_last=chunk is not chunks[-1],
-            )
-            for chunk in chunks
-        ]
+                return [*divide_images(img, rects, max_chunk_height=average_height * tweets_per_image)]
+            case (None, max_tweet_height) if max_tweet_height:
+                return [*divide_images(img, rects, max_chunk_height=max_tweet_height)]
+            case _:
+                return [img]
 
 
 __all__ = [

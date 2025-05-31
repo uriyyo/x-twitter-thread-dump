@@ -1,7 +1,9 @@
 import asyncio
 import math
 import re
-from collections.abc import AsyncIterable, Callable, Coroutine, Iterable
+import time
+from collections.abc import AsyncIterable, Callable, Coroutine, Iterable, Iterator
+from contextlib import contextmanager
 from functools import wraps
 from typing import Any, cast
 from urllib.parse import urlparse
@@ -79,9 +81,21 @@ def async_to_sync[**P, R](func: Callable[P, Coroutine[Any, Any, R]], /) -> Calla
     return cast(Callable[P, R], wrapper)
 
 
+@contextmanager
+def elapsed(label: str) -> Iterator[None]:
+    start = time.perf_counter()
+    try:
+        yield
+    finally:
+        end = time.perf_counter()
+        elapsed_time = end - start
+        print(f"{label} elapsed time: {elapsed_time:.2f} seconds")  # noqa: T201
+
+
 __all__ = [
     "alimited",
     "async_to_sync",
+    "elapsed",
     "get_tweet_id_from_url",
     "limited",
     "parse_guest_token",

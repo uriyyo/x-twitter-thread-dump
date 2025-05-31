@@ -3,17 +3,17 @@ from collections import defaultdict
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import cast, overload
 
 from httpx import AsyncClient, AsyncHTTPTransport
-from PIL.Image import Image
 from x_client_transaction import ClientTransaction
 from x_client_transaction.utils import generate_headers, get_ondemand_file_url
 
 from ._base import BaseXTwitterThreadDumpClient
-from .browser import async_browser_ctx, html_to_image_async
+from .browser import html_to_image_async
 from .consts import DEFAULT_BEARER_TOKEN, DEFAULT_RETRIES, DEFAULT_TIMEOUT
 from .entities import Thread, Tweet
+from .render import render_thread_html
+from .types import Img
 from .utils import alimited, parse_guest_token, response_to_bs4
 
 
@@ -78,55 +78,25 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
             yield tweet
             node = tweet.parent_id
 
-    @overload
-    async def thread_to_image(
-        self,
-        thread: Thread,
-        *,
-        tweets_per_image: None = None,
-        mobile: bool = False,
-        sequential: bool = False,
-    ) -> Image:
-        pass
-
-    @overload
-    async def thread_to_image(
-        self,
-        thread: Thread,
-        *,
-        tweets_per_image: int,
-        mobile: bool = False,
-        sequential: bool = False,
-    ) -> list[Image]:
-        pass
-
     async def thread_to_image(
         self,
         thread: list[Tweet],
         *,
         tweets_per_image: int | None = None,
+        max_tweet_height: int | None = None,
         mobile: bool = False,
-        sequential: bool = False,
-    ) -> list[Image] | Image:
+    ) -> list[Img]:
         await self.download_previews(thread)
 
-        result = self._thread_to_html_chunks(
-            thread,
+        html = render_thread_html(thread)
+        img, rects = await html_to_image_async(html, mobile=mobile)
+
+        return self._prepare_result_img(
+            img,
+            rects,
             tweets_per_image=tweets_per_image,
+            max_tweet_height=max_tweet_height,
         )
-
-        match result:
-            case [*htmls]:
-                if sequential:
-                    imgs = [await html_to_image_async(html, mobile=mobile) for html in htmls]
-                else:
-                    async with async_browser_ctx(mobile=mobile) as (_, ctx):
-                        imgs = await gather(*[html_to_image_async(html, ctx=ctx, mobile=mobile) for html in htmls])
-
-                return [*imgs]
-
-            case html:
-                return await html_to_image_async(cast(str, html), mobile=mobile)
 
     async def download_previews(self, thread: Thread, /) -> None:
         medias = [media for tweet in thread for media in tweet.all_preview_media() if not media.raw_preview_bytes]
