@@ -12,6 +12,11 @@ def base64str_to_image(base64_str: str) -> Img:
     return bytes_to_image(content)
 
 
+def image_to_base64str(image: Img) -> str:
+    image_bytes = image_to_bytes(image)
+    return base64.b64encode(image_bytes).decode("utf-8")
+
+
 def bytes_to_image(image_bytes: bytes) -> Img:
     return Image.open(io.BytesIO(image_bytes))
 
@@ -68,6 +73,7 @@ __all__ = [
     "base64str_to_image",
     "bytes_to_image",
     "divide_images",
+    "image_to_base64str",
     "image_to_bytes",
     "scale_image",
 ]
