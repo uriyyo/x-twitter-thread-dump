@@ -2,6 +2,7 @@ import math
 from asyncio import gather
 from collections.abc import AsyncIterator
 from contextlib import AsyncExitStack, asynccontextmanager
+from dataclasses import dataclass
 from typing import Any, cast
 
 from playwright.async_api import Browser as AsyncBrowser
@@ -14,7 +15,7 @@ from .types import ClientBoundingRect, Img
 
 MOBILE_CONFIG = {
     "color_scheme": "dark",
-    "viewport": {"width": 450, "height": 400},
+    "viewport": {"width": 450, "height": 1000},
     "device_scale_factor": 2,
     "is_mobile": True,
 }
@@ -43,6 +44,13 @@ BROWSER_RUN_ARGS = [
     "--renderer-process-limit=1",
     "--memory-pressure-off",
 ]
+
+
+@dataclass
+class HTMLToImageResult:
+    img: Img
+    rects: list[ClientBoundingRect]
+    scale: float
 
 
 def _get_scale(*, mobile: bool) -> float:
@@ -81,7 +89,7 @@ def html_to_image(
     *,
     headless: bool = True,
     mobile: bool = False,
-) -> tuple[Img, list[ClientBoundingRect]]:
+) -> HTMLToImageResult:
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=headless,
@@ -97,9 +105,16 @@ def html_to_image(
             page.wait_for_load_state(state="domcontentloaded")
 
             screenshot = page.locator(".thread-container").screenshot()
-            rects = page.locator(".tweet").evaluate_all("(tweets) => tweets.map(el => el.getBoundingClientRect())")
+            rects = page.locator(".thread-container > .tweet").evaluate_all(
+                "(tweets) => tweets.map(el => el.getBoundingClientRect())"
+            )
 
-            return bytes_to_image(screenshot), _normalize_reacts(rects, scale=_get_scale(mobile=mobile))
+            scale = _get_scale(mobile=mobile)
+            return HTMLToImageResult(
+                img=bytes_to_image(screenshot),
+                rects=_normalize_reacts(rects, scale=scale),
+                scale=scale,
+            )
 
 
 @asynccontextmanager
@@ -145,7 +160,7 @@ async def html_to_image_async(
     ctx: AsyncBrowserContext | None = None,
     headless: bool = True,
     mobile: bool = False,
-) -> tuple[Img, list[ClientBoundingRect]]:
+) -> HTMLToImageResult:
     async with AsyncExitStack() as stack:
         if ctx is None and browser is None:
             browser = await stack.enter_async_context(async_browser(headless=headless))
@@ -161,15 +176,23 @@ async def html_to_image_async(
 
         screenshot, rects = await gather(
             page.locator(".thread-container").screenshot(),
-            page.locator(".tweet").evaluate_all("(tweets) => tweets.map(el => el.getBoundingClientRect())"),
+            page.locator(".thread-container > .tweet").evaluate_all(
+                "(tweets) => tweets.map(el => el.getBoundingClientRect())"
+            ),
         )
 
-    return bytes_to_image(screenshot), _normalize_reacts(rects, scale=_get_scale(mobile=mobile))
+    scale = _get_scale(mobile=mobile)
+    return HTMLToImageResult(
+        img=bytes_to_image(screenshot),
+        rects=_normalize_reacts(rects, scale=scale),
+        scale=scale,
+    )
 
 
 __all__ = [
     "AsyncBrowser",
     "AsyncBrowserContext",
+    "HTMLToImageResult",
     "async_browser",
     "async_browser_ctx",
     "html_to_image",

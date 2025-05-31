@@ -88,11 +88,10 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
         self.download_previews(thread)
 
         html = render_thread_html(thread)
-        img, rects = html_to_image(html, mobile=mobile)
+        res = html_to_image(html, mobile=mobile)
 
         return self._prepare_result_img(
-            img,
-            rects,
+            res,
             tweets_per_image=tweets_per_image,
             max_tweet_height=max_tweet_height,
         )

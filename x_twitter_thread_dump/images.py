@@ -48,9 +48,9 @@ def divide_images(
 
         return img.crop(
             (
-                chunk[0]["left"],
+                0,
                 chunk[0]["top"],
-                chunk[-1]["right"],
+                img.width,
                 chunk[-1]["bottom"],
             )
         )
