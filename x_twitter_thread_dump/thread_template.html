@@ -51,6 +51,7 @@
         .tweet-content {
             width: 100%;
             min-width: 0; /* Allow proper sizing in flex context */
+            overflow-wrap: break-word; /* Ensure long content wraps */
         }
         .tweet-header {
             display: flex;
@@ -136,20 +137,30 @@
         .tweet-text {
             white-space: pre-wrap;
             word-wrap: break-word;
+            overflow-wrap: break-word; /* Added to ensure better handling of long words */
+            word-break: break-word; /* Added to handle long strings like URLs */
             font-size: 1.05em; /* Increased from 0.9375em */
             line-height: 1.3125;
             margin-top: 2px; /* Added small top margin instead */
             margin-bottom: 12px;
+            max-width: 100%; /* Ensure text container doesn't exceed its parent */
+            overflow: visible; /* Make sure text isn't cut off */
+            hyphens: auto; /* Enable hyphenation when needed */
         }
         
         /* Styling for hashtags, links and mentions */
         .tweet-text a, .tweet-text .hashtag, .tweet-text .mention {
             color: #1d9bf0; /* Twitter blue */
             text-decoration: none;
+            word-break: break-word; /* Allow breaking long URLs */
+            overflow-wrap: break-word;
         }
         
-        .tweet-text a:hover, .tweet-text .hashtag:hover, .tweet-text .mention:hover {
-            text-decoration: underline;
+        /* Ensure tweet body content can break long words */
+        .tweet-body-content {
+            max-width: 100%;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
         }
         
         /* Reduce spacing when there's no media after the text */

@@ -186,7 +186,7 @@ class Tweet:
             yield self.quoted_tweet.user.avatar
 
     @classmethod
-    def _parse_tweet_result(cls, result: AnyDict, /) -> Self:
+    def _parse_tweet_result(cls, result: AnyDict, /) -> Self:  # noqa: PLR0912
         match result:
             case {
                 "result": {
@@ -240,6 +240,11 @@ class Tweet:
                     case {"card": {"legacy": {"binding_values": [*binding_values]}}}:
                         if img := _parse_binding_values(binding_values):
                             media.append(img)
+
+                match rest:
+                    case {"note_tweet": {"note_tweet_results": {"result": {"text": note_text}}}}:
+                        if len(note_text) > len(text):
+                            text = note_text
 
                 return cls(
                     id=id_,

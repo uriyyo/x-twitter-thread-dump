@@ -15,34 +15,56 @@ from .types import ClientBoundingRect, Img
 
 MOBILE_CONFIG = {
     "color_scheme": "dark",
-    "viewport": {"width": 450, "height": 1000},
-    "device_scale_factor": 2,
+    "viewport": {"width": 500, "height": 1000},
+    "device_scale_factor": 1.5,
     "is_mobile": True,
 }
 
 BROWSER_RUN_ARGS = [
-    "--disable-gpu",
-    "--disable-dev-shm-usage",
-    "--disable-setuid-sandbox",
-    "--no-sandbox",
-    "--js-flags=--expose-gc,--max-old-space-size=100",  # Limit JS heap to 100MB
-    "--single-process",
-    "--disable-extensions",
-    "--disable-component-extensions-with-background-pages",
-    "--font-render-hinting=medium",
-    "--enable-font-antialiasing",
-    # Additional CPU-saving args
-    "--disable-accelerated-2d-canvas",
-    "--disable-accelerated-jpeg-decoding",
-    "--disable-accelerated-video-decode",
-    "--disable-backgrounding-occluded-windows",
-    "--disable-breakpad",
-    "--disable-features=TranslateUI,BlinkGenPropertyTrees",
-    "--disable-background-networking",
-    "--disable-notifications",
-    "--disable-print-preview",
-    "--renderer-process-limit=1",
-    "--memory-pressure-off",
+    "--headless=new",  # Use the new headless mode for better performance
+    "--disable-gpu",  # Disable GPU usage
+    "--disable-dev-shm-usage",  # Avoid shared memory issues
+    "--disable-setuid-sandbox",  # Disable setuid sandbox
+    "--no-sandbox",  # Disable sandboxing
+    "--disable-extensions",  # Disable extensions
+    "--disable-background-timer-throttling",  # Disable throttling of timers
+    "--disable-backgrounding-occluded-windows",  # Disable backgrounding
+    "--disable-renderer-backgrounding",  # Disable renderer backgrounding
+    "--disable-features=TranslateUI,BlinkGenPropertyTrees",  # Disable unused features
+    "--disable-sync",  # Disable syncing
+    "--disable-notifications",  # Disable notifications
+    "--disable-default-apps",  # Disable default apps
+    "--disable-popup-blocking",  # Disable popup blocking
+    "--disable-crash-reporter",  # Disable crash reporting
+    "--disable-component-extensions-with-background-pages",  # Disable background extensions
+    "--disable-ipc-flooding-protection",  # Disable IPC flooding protection
+    "--disable-hang-monitor",  # Disable hang monitor
+    "--disable-client-side-phishing-detection",  # Disable phishing detection
+    "--disable-print-preview",  # Disable print preview
+    "--disable-translate",  # Disable translation
+    "--metrics-recording-only",  # Disable metrics recording
+    "--mute-audio",  # Mute audio
+    "--no-first-run",  # Skip first run tasks
+    "--no-default-browser-check",  # Skip default browser check
+    "--single-process",  # Run in a single process
+    "--renderer-process-limit=1",  # Limit renderer processes
+    "--disable-software-rasterizer",  # Disable software rasterizer
+    "--disable-accelerated-2d-canvas",  # Disable 2D canvas acceleration
+    "--disable-accelerated-video-decode",  # Disable video decoding acceleration
+    "--disable-accelerated-jpeg-decoding",  # Disable JPEG decoding acceleration
+    "--disable-background-networking",  # Disable background networking
+    "--memory-pressure-off",  # Disable memory pressure handling
+    "--disable-logging",  # Disable logging to reduce I/O
+    "--disable-domain-reliability",  # Disable domain reliability monitoring
+    "--disable-pushstate-throttle",  # Disable throttling of pushState
+    "--disable-threaded-animation",  # Disable threaded animations
+    "--disable-threaded-scrolling",  # Disable threaded scrolling
+    "--disable-checker-imaging",  # Disable checker imaging
+    "--disable-gesture-typing",  # Disable gesture typing
+    "--disable-cloud-import",  # Disable cloud import
+    "--disable-voice-input",  # Disable voice input
+    "--disable-background-media-suspend",  # Disable media suspension in the background
+    "--disable-remote-fonts",  # Disable loading of remote fonts
 ]
 
 
@@ -94,7 +116,7 @@ def html_to_image(
         browser = p.chromium.launch(
             headless=headless,
             channel="chrome",
-            args=BROWSER_RUN_ARGS,
+            args=[*BROWSER_RUN_ARGS],
         )
 
         with browser:
@@ -126,7 +148,7 @@ async def async_browser(
         browser = await p.chromium.launch(
             headless=headless,
             channel="chrome",
-            args=BROWSER_RUN_ARGS,
+            args=[*BROWSER_RUN_ARGS],
         )
 
         async with browser:
