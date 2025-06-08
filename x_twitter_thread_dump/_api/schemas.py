@@ -7,16 +7,22 @@ from pydantic import AnyHttpUrl, BaseModel, Field
 from pydantic.types import PositiveInt
 
 
-class Base64ImageSchema(BaseModel):
+class BaseSchema(BaseModel):
+    model_config = {
+        "from_attributes": True,
+    }
+
+
+class Base64ImageSchema(BaseSchema):
     content: str
 
 
-class MediaSchema(BaseModel):
+class MediaSchema(BaseSchema):
     url: AnyHttpUrl
     type: Literal["image", "video"]
 
 
-class TweetImagesSchema(BaseModel):
+class TweetImagesSchema(BaseSchema):
     images: list[Base64ImageSchema]
     media: list[MediaSchema] | None = None
 
@@ -38,7 +44,7 @@ type TweetID = Annotated[
 ]
 
 
-class TweetUserSchema(BaseModel):
+class TweetUserSchema(BaseSchema):
     id: TweetID
     name: str
     username: str
@@ -48,7 +54,7 @@ class TweetUserSchema(BaseModel):
     avatar: TweetMediaSchema | None = None
 
 
-class TweetSchema(BaseModel):
+class TweetSchema(BaseSchema):
     id: TweetID
     text: str
     user: TweetUserSchema
