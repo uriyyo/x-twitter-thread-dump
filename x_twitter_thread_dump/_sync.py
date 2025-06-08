@@ -90,7 +90,7 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
         html = render_thread_html(thread)
         res = html_to_image(html, mobile=mobile)
 
-        return self._prepare_result_img(
+        return self.prepare_result_img(
             res,
             tweets_per_image=tweets_per_image,
             max_tweet_height=max_tweet_height,

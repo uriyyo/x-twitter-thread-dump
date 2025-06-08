@@ -91,7 +91,7 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
         html = render_thread_html(thread)
         result = await html_to_image_async(html, mobile=mobile)
 
-        return self._prepare_result_img(
+        return self.prepare_result_img(
             result,
             tweets_per_image=tweets_per_image,
             max_tweet_height=max_tweet_height,

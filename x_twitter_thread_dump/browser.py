@@ -16,7 +16,7 @@ from .types import ClientBoundingRect, Img
 MOBILE_CONFIG = {
     "color_scheme": "dark",
     "viewport": {"width": 500, "height": 1000},
-    "device_scale_factor": 1.5,
+    "device_scale_factor": 1,
     "is_mobile": True,
 }
 

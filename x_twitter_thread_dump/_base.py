@@ -34,7 +34,7 @@ class BaseXTwitterThreadDumpClient:
             },
         }
 
-    def _prepare_result_img(
+    def prepare_result_img(
         self,
         res: HTMLToImageResult,
         *,
