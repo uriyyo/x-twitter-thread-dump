@@ -1,5 +1,4 @@
 import math
-import os
 from asyncio import gather
 from collections.abc import AsyncIterator, Iterator
 from contextlib import AsyncExitStack, ExitStack, asynccontextmanager, contextmanager
@@ -119,34 +118,40 @@ BROWSER_RUN_ARGS = [
     "--disable-password-generation",  # Disable password generation
     "--disable-autofill",  # Disable autofill
     "--disable-autofill-keyboard-accessory-view",  # Disable autofill keyboard accessory
+    "--process-per-site",  # Use one process per site instead of per tab
+    "--disable-component-update",  # Disable browser component updates
+    "--disable-site-isolation-trials",  # Disable site isolation (uses fewer processes)
+    "--aggressive-cache-discard",  # Aggressively discard cache to save memory
+    "--disable-pinch",  # Disable pinch gestures
+    "--disable-prefetch",  # Disable prefetching resources
+    "--disk-cache-size=1",  # Minimal disk cache (1MB)
+    "--disable-smooth-scrolling",  # Disable smooth scrolling
+    "--disable-reading-from-canvas",  # Disable canvas readback
+    "--enable-tab-discarding",  # Allow discarding tabs to save memory
+    "--js-flags=--lite-mode --jitless --no-opt",  # Extreme JS memory optimization
+    "--force-gpu-mem-available-mb=32",  # Limit GPU memory
+    "--disable-font-subpixel-positioning",  # Disable font subpixel positioning
+    "--disable-composited-antialiasing",  # Disable composited antialiasing
+    "--disable-zero-copy",  # Disable zero-copy texture uploads
+    "--disable-2d-canvas-clip-aa",  # Disable antialiasing on canvas clip
+    "--disable-2d-canvas-image-chromium",  # Use skia for canvas
+    "--disable-presentation-api",  # Disable presentation API
+    "--disable-permissions-api",  # Disable permissions API
+    # Additional flags for extreme resource constraints in 1GB RAM VM
+    "--memory-limit=256",  # Limit Chrome's memory usage to 256MB
+    "--in-process-gpu",  # Run GPU process inside browser process to reduce process count
+    "--enable-low-end-device-mode",  # Enable optimizations for low-memory devices
+    # More aggressive process consolidation
+    "--disable-features=ProcessPerSiteUpToMainFrameThreshold,IsolateOrigins,site-per-process",
+    "--renderer-process-limit=1",  # Ensure only one renderer process (reinforcing existing setting)
+    "--blink-settings=preferredImageFormat=webp",  # Use more efficient image format
+    "--use-gl=swiftshader",  # Use more efficient software rendering
+    "--force-wave-audio",  # Use less memory-intensive audio system
+    "--shared-array-buffer=false",  # Disable shared array buffer to save memory
+    "--minimal-hints-renderer",  # Reduce renderer features
+    "--v8-cache-options=none",  # Disable V8 script caching to reduce memory
+    "--no-zygote",  # Disable the zygote process to reduce process count
 ]
-
-if (os.getenv("DISABLE_BROWSER_ACCELERATION") or "").lower() in {"1", "true", "yes"}:
-    BROWSER_RUN_ARGS += [
-        "--disable-accelerated-video",  # Disable all video acceleration
-        "--disable-accelerated-mjpeg-decode",  # Disable MJPEG decoding acceleration
-        "--disable-accelerated-video-encode",  # Disable video encoding acceleration
-        "--disable-accelerated-video-decode",  # Disable video decoding acceleration
-        "--disable-accelerated-vpx-decode",  # Disable VPx decoding acceleration
-        "--disable-accelerated-vpx-encode",  # Disable VPx encoding acceleration
-        "--disable-accelerated-webgl",  # Disable WebGL acceleration
-        "--disable-accelerated-plugins",  # Disable plugin acceleration
-        "--disable-accelerated-painting",  # Disable accelerated painting
-        "--disable-accelerated-compositing",  # Disable accelerated compositing
-        "--disable-accelerated-layers",  # Disable accelerated layers
-        "--disable-accelerated-2d-canvas",  # Disable 2D canvas acceleration
-        "--disable-accelerated-video-decode",  # Disable video decoding acceleration
-        "--disable-accelerated-jpeg-decoding",  # Disable JPEG decoding acceleration
-        "--disable-accelerated-video",  # Disable video acceleration
-        "--disable-accelerated-vpx-decode",  # Disable VPx decoding acceleration
-        "--disable-accelerated-vpx-encode",  # Disable VPx encoding acceleration
-        "--disable-accelerated-webgl",  # Disable WebGL acceleration
-        "--disable-accelerated-plugins",  # Disable plugin acceleration
-        "--disable-accelerated-painting",  # Disable accelerated painting
-        "--disable-accelerated-compositing",  # Disable accelerated compositing
-        "--disable-accelerated-layers",  # Disable accelerated layers
-        "--disable-accelerated-2d-canvas",  # Disable 2D canvas acceleration
-    ]
 
 
 def _get_ctx_config(config: BrowserCtxConfig | None = None) -> BrowserCtxConfig:
