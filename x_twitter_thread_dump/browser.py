@@ -1,4 +1,5 @@
 import math
+import os
 from asyncio import gather
 from collections.abc import AsyncIterator, Iterator
 from contextlib import AsyncExitStack, ExitStack, asynccontextmanager, contextmanager
@@ -95,7 +96,57 @@ BROWSER_RUN_ARGS = [
     "--disable-ntp-tiles",  # Disable tiles on new tab page
     "--disable-ntp-ui",  # Disable new tab page UI
     "--disable-ntp-voice-search",  # Disable voice search on new tab page
+    "--disable-http2",  # Disable HTTP/2
+    "--disable-quic",  # Disable QUIC protocol
+    "--disable-image-animation",  # Disable animated images
+    "--disable-media-session-api",  # Disable Media Session API
+    "--disable-video-capture",  # Disable video capture
+    "--disable-audio-capture",  # Disable audio capture
+    "--disable-remote-playback-api",  # Disable Remote Playback API
+    "--disable-usb",  # Disable USB access
+    "--disable-bluetooth",  # Disable Bluetooth access
+    "--disable-midi",  # Disable MIDI access
+    "--disable-webusb",  # Disable WebUSB
+    "--disable-web-bluetooth",  # Disable Web Bluetooth
+    "--disable-web-midi",  # Disable Web MIDI
+    "--disable-background-tasks",  # Disable background tasks
+    "--disable-network-throttling",  # Disable network throttling
+    "--disable-network-prediction",  # Disable network prediction
+    "--disable-preconnect",  # Disable preconnect
+    "--disable-prerender",  # Disable prerendering
+    "--disable-offline-pages",  # Disable offline pages
+    "--disable-save-password-bubble",  # Disable save password bubble
+    "--disable-password-generation",  # Disable password generation
+    "--disable-autofill",  # Disable autofill
+    "--disable-autofill-keyboard-accessory-view",  # Disable autofill keyboard accessory
 ]
+
+if (os.getenv("DISABLE_BROWSER_ACCELERATION") or "").lower() in {"1", "true", "yes"}:
+    BROWSER_RUN_ARGS += [
+        "--disable-accelerated-video",  # Disable all video acceleration
+        "--disable-accelerated-mjpeg-decode",  # Disable MJPEG decoding acceleration
+        "--disable-accelerated-video-encode",  # Disable video encoding acceleration
+        "--disable-accelerated-video-decode",  # Disable video decoding acceleration
+        "--disable-accelerated-vpx-decode",  # Disable VPx decoding acceleration
+        "--disable-accelerated-vpx-encode",  # Disable VPx encoding acceleration
+        "--disable-accelerated-webgl",  # Disable WebGL acceleration
+        "--disable-accelerated-plugins",  # Disable plugin acceleration
+        "--disable-accelerated-painting",  # Disable accelerated painting
+        "--disable-accelerated-compositing",  # Disable accelerated compositing
+        "--disable-accelerated-layers",  # Disable accelerated layers
+        "--disable-accelerated-2d-canvas",  # Disable 2D canvas acceleration
+        "--disable-accelerated-video-decode",  # Disable video decoding acceleration
+        "--disable-accelerated-jpeg-decoding",  # Disable JPEG decoding acceleration
+        "--disable-accelerated-video",  # Disable video acceleration
+        "--disable-accelerated-vpx-decode",  # Disable VPx decoding acceleration
+        "--disable-accelerated-vpx-encode",  # Disable VPx encoding acceleration
+        "--disable-accelerated-webgl",  # Disable WebGL acceleration
+        "--disable-accelerated-plugins",  # Disable plugin acceleration
+        "--disable-accelerated-painting",  # Disable accelerated painting
+        "--disable-accelerated-compositing",  # Disable accelerated compositing
+        "--disable-accelerated-layers",  # Disable accelerated layers
+        "--disable-accelerated-2d-canvas",  # Disable 2D canvas acceleration
+    ]
 
 
 def _get_ctx_config(config: BrowserCtxConfig | None = None) -> BrowserCtxConfig:
