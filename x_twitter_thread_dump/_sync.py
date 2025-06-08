@@ -12,7 +12,7 @@ from .browser import html_to_image
 from .consts import DEFAULT_BEARER_TOKEN, DEFAULT_RETRIES, DEFAULT_TIMEOUT
 from .entities import Thread, Tweet
 from .render import render_thread_html
-from .types import Img
+from .types import BrowserCtxConfig, Img
 from .utils import limited, parse_guest_token, response_to_bs4
 
 
@@ -83,12 +83,12 @@ class XTwitterThreadDumpClient(BaseXTwitterThreadDumpClient):
         *,
         tweets_per_image: int | None = None,
         max_tweet_height: int | None = None,
-        mobile: bool = False,
+        config: BrowserCtxConfig | None = None,
     ) -> list[Img]:
         self.download_previews(thread)
 
         html = render_thread_html(thread)
-        res = html_to_image(html, mobile=mobile)
+        res = html_to_image(html, config=config)
 
         return self.prepare_result_img(
             res,

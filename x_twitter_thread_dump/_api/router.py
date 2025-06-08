@@ -7,8 +7,15 @@ from x_twitter_thread_dump import Tweet
 from x_twitter_thread_dump.browser import HTMLToImageResult, html_to_image_async
 from x_twitter_thread_dump.images import image_to_base64str, image_to_bytes
 from x_twitter_thread_dump.render import render_thread_html
+from x_twitter_thread_dump.types import BrowserCtxConfig
 
-from .dependencies import CurrentSharableBrowserCtx, CurrentThread, CurrentThreadWithPreviews, ThreadClient
+from .dependencies import (
+    CurrentBrowserCtxConfig,
+    CurrentSharableBrowserCtx,
+    CurrentThread,
+    CurrentThreadClient,
+    CurrentThreadWithPreviews,
+)
 from .schemas import Base64ImageSchema, MediaSchema, TweetImagesSchema, TweetSchema
 from .settings import settings
 from .utils import limit_concurrency
@@ -53,28 +60,29 @@ async def get_tweet_html(
 async def render_html(
     browser_ctx: CurrentSharableBrowserCtx,
     chunk: str,
+    config: BrowserCtxConfig | None = None,
 ) -> HTMLToImageResult:
     async with browser_ctx.acquire() as browser:
         return await html_to_image_async(
             chunk,
             browser=browser,
-            mobile=True,
-            headless=True,
+            config=config,
         )
 
 
 @router.get("/imgs/{tweet_id}")
 async def get_tweet_imgs(  # noqa: PLR0913
     thread: CurrentThreadWithPreviews,
-    client: ThreadClient,
+    client: CurrentThreadClient,
     browser_ctx: CurrentSharableBrowserCtx,
+    config: CurrentBrowserCtxConfig,
     *,
     include_media: Annotated[bool, Query()] = False,
     tweets_per_image: Annotated[int | None, Query(ge=1, le=10)] = None,
     max_tweet_height: Annotated[int | None, Query(ge=1, le=10_000)] = None,
 ) -> TweetImagesSchema:
     html = render_thread_html(thread)
-    result = await render_html(browser_ctx, html)
+    result = await render_html(browser_ctx, chunk=html, config=config)
 
     imgs = client.prepare_result_img(
         result,
@@ -98,9 +106,10 @@ async def get_tweet_imgs(  # noqa: PLR0913
 async def get_tweet_raw_img(
     thread: CurrentThreadWithPreviews,
     browser_ctx: CurrentSharableBrowserCtx,
+    config: CurrentBrowserCtxConfig,
 ) -> Response:
     html = render_thread_html(thread)
-    result = await render_html(browser_ctx, html)
+    result = await render_html(browser_ctx, chunk=html, config=config)
 
     return Response(
         content=image_to_bytes(result.img),

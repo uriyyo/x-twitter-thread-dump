@@ -1,23 +1,28 @@
 import math
 from asyncio import gather
-from collections.abc import AsyncIterator
-from contextlib import AsyncExitStack, asynccontextmanager
+from collections.abc import AsyncIterator, Iterator
+from contextlib import AsyncExitStack, ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from typing import Any, cast
 
 from playwright.async_api import Browser as AsyncBrowser
-from playwright.async_api import BrowserContext as AsyncBrowserContext
 from playwright.async_api import async_playwright
+from playwright.sync_api import Browser as SyncBrowser
 from playwright.sync_api import sync_playwright
 
 from .images import bytes_to_image
-from .types import ClientBoundingRect, Img
+from .types import BrowserCtxConfig, ClientBoundingRect, Img
 
-MOBILE_CONFIG = {
+DEFAULT_CONFIG: BrowserCtxConfig = {
     "color_scheme": "dark",
     "viewport": {"width": 500, "height": 1000},
     "device_scale_factor": 2.0,
     "is_mobile": True,
+    "locale": "en-US",
+    "offline": True,
+    "reduced_motion": "reduce",
+    "service_workers": "block",
+    "java_script_enabled": False,
 }
 
 BROWSER_RUN_ARGS = [
@@ -65,7 +70,43 @@ BROWSER_RUN_ARGS = [
     "--disable-voice-input",  # Disable voice input
     "--disable-background-media-suspend",  # Disable media suspension in the background
     "--disable-remote-fonts",  # Disable loading of remote fonts
+    "--disable-webgl",  # Disable WebGL
+    "--disable-webrtc",  # Disable WebRTC
+    "--disable-file-system",  # Disable file system access
+    "--disable-databases",  # Disable database storage
+    "--disable-local-storage",  # Disable local storage
+    "--disable-session-storage",  # Disable session storage
+    "--disable-shared-workers",  # Disable shared workers
+    "--disable-service-workers",  # Disable service workers
+    "--disable-background-fetch",  # Disable background fetch
+    "--disable-background-sync",  # Disable background sync
+    "--disable-histogram-customizer",  # Disable histogram customizer
+    "--disable-permissions-api",  # Disable permissions API
+    "--disable-v8-idle-tasks",  # Disable V8 idle tasks
+    "--disable-renderer-accessibility",  # Disable accessibility features
+    "--disable-speech-api",  # Disable speech API
+    "--disable-translate-new-ux",  # Disable new translation UX
+    "--disable-ntp-animations",  # Disable new tab page animations
+    "--disable-ntp-customization-menu",  # Disable new tab page customization
+    "--disable-ntp-modules",  # Disable new tab page modules
+    "--disable-ntp-popular-sites",  # Disable popular sites on new tab page
+    "--disable-ntp-snippets",  # Disable snippets on new tab page
+    "--disable-ntp-remote-suggestions",  # Disable remote suggestions on new tab page
+    "--disable-ntp-tiles",  # Disable tiles on new tab page
+    "--disable-ntp-ui",  # Disable new tab page UI
+    "--disable-ntp-voice-search",  # Disable voice search on new tab page
 ]
+
+
+def _get_ctx_config(config: BrowserCtxConfig | None = None) -> BrowserCtxConfig:
+    config = DEFAULT_CONFIG | (config or {})
+
+    if not config.get("is_mobile"):
+        config.pop("is_mobile", None)
+        config.pop("has_touch", None)
+        config.pop("device_scale_factor", None)
+
+    return config
 
 
 @dataclass
@@ -79,7 +120,7 @@ def _get_scale(*, mobile: bool) -> float:
     if not mobile:
         return 1.0
 
-    return cast(int, MOBILE_CONFIG["device_scale_factor"])
+    return cast(int, DEFAULT_CONFIG["device_scale_factor"])
 
 
 def _normalize_reacts(
@@ -105,13 +146,11 @@ def _normalize_reacts(
     ]
 
 
-def html_to_image(
-    html: str,
-    /,
+@contextmanager
+def sync_browser(
     *,
     headless: bool = True,
-    mobile: bool = False,
-) -> HTMLToImageResult:
+) -> Iterator[SyncBrowser]:
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=headless,
@@ -120,23 +159,39 @@ def html_to_image(
         )
 
         with browser:
-            ctx = browser.new_context(**(MOBILE_CONFIG if mobile else {}))  # type: ignore[arg-type]
+            yield browser
 
-            page = ctx.new_page()
-            page.set_content(html)
-            page.wait_for_load_state(state="domcontentloaded")
 
-            screenshot = page.locator(".thread-container").screenshot()
-            rects = page.locator(".thread-container > .tweet").evaluate_all(
-                "(tweets) => tweets.map(el => el.getBoundingClientRect())"
-            )
+def html_to_image(
+    html: str,
+    /,
+    *,
+    headless: bool = True,
+    browser: SyncBrowser | None = None,
+    config: BrowserCtxConfig | None = None,
+) -> HTMLToImageResult:
+    with ExitStack() as stack:
+        if browser is None:
+            browser = stack.enter_context(sync_browser(headless=headless))
 
-            scale = _get_scale(mobile=mobile)
-            return HTMLToImageResult(
-                img=bytes_to_image(screenshot),
-                rects=_normalize_reacts(rects, scale=scale),
-                scale=scale,
-            )
+        ctx_config = _get_ctx_config(config)
+        ctx = browser.new_context(**ctx_config)
+
+        page = ctx.new_page()
+        page.set_content(html)
+        page.wait_for_load_state(state="domcontentloaded")
+
+        screenshot = page.locator(".thread-container").screenshot()
+        rects = page.locator(".thread-container > .tweet").evaluate_all(
+            "(tweets) => tweets.map(el => el.getBoundingClientRect())"
+        )
+
+        scale = _get_scale(mobile=ctx_config.get("is_mobile", True))
+        return HTMLToImageResult(
+            img=bytes_to_image(screenshot),
+            rects=_normalize_reacts(rects, scale=scale),
+            scale=scale,
+        )
 
 
 @asynccontextmanager
@@ -155,44 +210,22 @@ async def async_browser(
             yield browser
 
 
-@asynccontextmanager
-async def async_browser_ctx(
-    *,
-    browser: AsyncBrowser | None = None,
-    headless: bool = True,
-    mobile: bool = False,
-) -> AsyncIterator[tuple[AsyncBrowser, AsyncBrowserContext]]:
-    async with AsyncExitStack() as stack:
-        if browser is None:
-            browser = await stack.enter_async_context(async_browser(headless=headless))
-
-        ctx = await browser.new_context(
-            **(MOBILE_CONFIG if mobile else {}),  # type: ignore[arg-type]
-        )
-
-        async with ctx:
-            yield browser, ctx
-
-
 async def html_to_image_async(
     html: str,
     /,
     *,
     browser: AsyncBrowser | None = None,
-    ctx: AsyncBrowserContext | None = None,
     headless: bool = True,
-    mobile: bool = False,
+    config: BrowserCtxConfig | None = None,
 ) -> HTMLToImageResult:
     async with AsyncExitStack() as stack:
-        if ctx is None and browser is None:
+        if browser is None:
             browser = await stack.enter_async_context(async_browser(headless=headless))
 
-        if ctx is None:
-            _, ctx = await stack.enter_async_context(
-                async_browser_ctx(browser=browser, headless=headless, mobile=mobile)
-            )
+        ctx_config = _get_ctx_config(config)
+        ctx = await browser.new_context(**ctx_config)
 
-        page = await ctx.new_page()  # type: ignore[union-attr]
+        page = await ctx.new_page()
         await page.set_content(html)
         await page.wait_for_load_state(state="domcontentloaded")
 
@@ -203,7 +236,7 @@ async def html_to_image_async(
             ),
         )
 
-    scale = _get_scale(mobile=mobile)
+    scale = _get_scale(mobile=ctx_config.get("is_mobile", True))
     return HTMLToImageResult(
         img=bytes_to_image(screenshot),
         rects=_normalize_reacts(rects, scale=scale),
@@ -213,10 +246,9 @@ async def html_to_image_async(
 
 __all__ = [
     "AsyncBrowser",
-    "AsyncBrowserContext",
     "HTMLToImageResult",
+    "SyncBrowser",
     "async_browser",
-    "async_browser_ctx",
     "html_to_image",
     "html_to_image_async",
 ]

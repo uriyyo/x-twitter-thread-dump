@@ -9,11 +9,11 @@ from x_client_transaction import ClientTransaction
 from x_client_transaction.utils import generate_headers, get_ondemand_file_url
 
 from ._base import BaseXTwitterThreadDumpClient
-from .browser import html_to_image_async
+from .browser import AsyncBrowser, html_to_image_async
 from .consts import DEFAULT_BEARER_TOKEN, DEFAULT_RETRIES, DEFAULT_TIMEOUT
 from .entities import Thread, Tweet
 from .render import render_thread_html
-from .types import Img
+from .types import BrowserCtxConfig, Img
 from .utils import alimited, parse_guest_token, response_to_bs4
 
 
@@ -84,12 +84,17 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
         *,
         tweets_per_image: int | None = None,
         max_tweet_height: int | None = None,
-        mobile: bool = False,
+        config: BrowserCtxConfig | None = None,
+        browser: AsyncBrowser | None = None,
     ) -> list[Img]:
         await self.download_previews(thread)
 
         html = render_thread_html(thread)
-        result = await html_to_image_async(html, mobile=mobile)
+        result = await html_to_image_async(
+            html,
+            browser=browser,
+            config=config,
+        )
 
         return self.prepare_result_img(
             result,
