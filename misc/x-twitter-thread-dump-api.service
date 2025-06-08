@@ -1,0 +1,23 @@
+[Unit]
+Description=x-twitter-thread-dump-api
+After=network.target
+
+[Service]
+Type=simple
+
+WorkingDirectory=/root/x-twitter-thread-dump
+PrivateTmp=true
+
+ExecStart=/root/.local/bin/uv run uvicorn \
+        --proxy-headers \
+        --forwarded-allow-ips='*' \
+        --workers=4 \
+        --port=8000 \
+        --no-access-log \
+        x_twitter_thread_dump._api:app
+ExecReload=/bin/kill -HUP ${MAINPID}
+RestartSec=1
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,28 @@
+name: Sync
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run sync
+        shell: bash
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY_PRIVATE_KEY: ${{ secrets.SSH_KEY_PRIVATE_KEY }}
+        run: |
+          export PEM_FILE="/home/runner/key.pem"
+
+          echo "$SSH_KEY_PRIVATE_KEY" > "$PEM_FILE"
+          chmod 0600 "$PEM_FILE"
+
+          bash ./scripts/sync.sh
