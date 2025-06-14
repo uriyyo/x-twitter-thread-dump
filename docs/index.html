@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Thread Image Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <style>
+        .loading {
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+        .option-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        /* Custom slider styles for dark theme */
+        input[type="range"] {
+            background: #4b5563;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            background: #60a5fa;
+        }
+        
+        /* Updated Carousel styles */
+        .carousel-container {
+            position: relative;
+            padding: 0 70px; /* Increased padding for outside arrows */
+        }
+        .carousel-image {
+            transition: opacity 0.3s ease;
+        }
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(30, 58, 138, 0.9);
+            color: white;
+            border-radius: 50%;
+            width: 56px;  /* Increased from 48px for more padding */
+            height: 56px; /* Increased from 48px for more padding */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+        .carousel-button:hover {
+            background-color: rgb(30, 58, 138);
+        }
+        .carousel-prev {
+            left: 10px;
+        }
+        .carousel-next {
+            right: 10px;
+        }
+        .carousel-arrow {
+            width: 24px;
+            height: 24px;
+        }
+        
+        /* Added border style for images */
+        .img-with-border {
+            border: 2px solid #4b5563;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen text-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-center text-blue-400">Twitter Thread Image Generator</h1>
+            <p class="text-center text-gray-400 mt-2">Generate images from Twitter threads</p>
+        </header>
+
+        <div class="max-w-2xl mx-auto bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700">
+            <!-- Tweet ID Form -->
+            <form id="tweet-form" class="mb-6" hx-get="http://localhost:8000/imgs/${tweetId.value}" 
+                  hx-target="#results" hx-indicator="#loading-indicator">
+                <div class="mb-4">
+                    <label for="tweetId" class="block text-sm font-medium text-gray-300 mb-1">Tweet ID or URL</label>
+                    <input type="text" id="tweetId" name="tweet_id" 
+                           class="w-full px-3 py-2 border border-gray-600 bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                           placeholder="Enter tweet ID or URL" required>
+                    <p class="text-xs text-gray-400 mt-1">Example: 1234567890 or https://twitter.com/username/status/1234567890</p>
+                </div>
+                
+                <!-- Split option choice -->
+                <div class="mb-6 border-t border-gray-700 pt-4">
+                    <p class="text-sm font-medium text-gray-300 mb-2">Choose one option:</p>
+                    <div class="flex flex-wrap items-center gap-4 mb-4">
+                        <label class="flex items-center">
+                            <input type="radio" name="split_option" value="tweets_per_image" 
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700" 
+                                onchange="toggleSplitOption()">
+                            <span class="ml-2 text-sm text-gray-300">Tweets per image</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="radio" name="split_option" value="max_height" 
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700"
+                                onchange="toggleSplitOption()">
+                            <span class="ml-2 text-sm text-gray-300">Max tweet height</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="radio" name="split_option" value="no_split" 
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-700"
+                                checked onchange="toggleSplitOption()">
+                            <span class="ml-2 text-sm text-gray-300">No splitting</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="tweetsPerImageOption" class="mb-4 option-disabled">
+                    <label for="tweetsPerImage" class="block text-sm font-medium text-gray-300 mb-1">
+                        Tweets per image: <span id="tweetsPerImageValue">5</span>
+                    </label>
+                    <input type="range" id="tweetsPerImage" min="1" max="10" value="5"
+                           class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                           oninput="document.getElementById('tweetsPerImageValue').textContent = this.value"
+                           disabled>
+                </div>
+                
+                <div id="maxTweetHeightOption" class="mb-6 option-disabled">
+                    <label for="maxTweetHeight" class="block text-sm font-medium text-gray-300 mb-1">
+                        Max tweet height: <span id="maxTweetHeightValue">1000</span>px
+                    </label>
+                    <input type="range" id="maxTweetHeight" min="10" max="5000" step="100" value="1000"
+                           class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                           oninput="document.getElementById('maxTweetHeightValue').textContent = this.value" 
+                           disabled>
+                </div>
+                
+                <!-- Device Scale / Image Quality -->
+                <div class="mb-6 border-t border-gray-700 pt-4">
+                    <label for="deviceScale" class="block text-sm font-medium text-gray-300 mb-1">
+                        Image Quality: <span id="deviceScaleValue">1</span>x
+                    </label>
+                    <input type="range" id="deviceScale" name="device_scale" min="0" max="3" step="0.5" value="1"
+                           class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                           oninput="document.getElementById('deviceScaleValue').textContent = this.value">
+                    <p class="text-xs text-gray-400 mt-1">Higher values produce better quality but larger images</p>
+                </div>
+                
+                <button type="submit" 
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition">
+                    Generate Images
+                </button>
+            </form>
+
+            <!-- Loading Indicator -->
+            <div id="loading-indicator" class="hidden">
+                <div class="flex justify-center items-center">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-400"></div>
+                </div>
+                <p class="text-center mt-2 text-gray-400">Generating images...</p>
+            </div>
+
+            <!-- Results Area -->
+            <div id="results" class="mt-8"></div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSplitOption() {
+            const selectedOption = document.querySelector('input[name="split_option"]:checked').value;
+            const tweetsPerImageOption = document.getElementById('tweetsPerImageOption');
+            const maxTweetHeightOption = document.getElementById('maxTweetHeightOption');
+            const tweetsPerImageInput = document.getElementById('tweetsPerImage');
+            const maxTweetHeightInput = document.getElementById('maxTweetHeight');
+            
+            if (selectedOption === 'tweets_per_image') {
+                // Enable tweets per image, disable max height
+                tweetsPerImageOption.classList.remove('option-disabled');
+                maxTweetHeightOption.classList.add('option-disabled');
+                tweetsPerImageInput.disabled = false;
+                maxTweetHeightInput.disabled = true;
+                maxTweetHeightInput.removeAttribute('name'); // Remove from form submission
+                tweetsPerImageInput.setAttribute('name', 'tweets_per_image');
+            } else if (selectedOption === 'max_height') {
+                // Enable max height, disable tweets per image
+                maxTweetHeightOption.classList.remove('option-disabled');
+                tweetsPerImageOption.classList.add('option-disabled');
+                maxTweetHeightInput.disabled = false;
+                tweetsPerImageInput.disabled = true;
+                tweetsPerImageInput.removeAttribute('name'); // Remove from form submission
+                maxTweetHeightInput.setAttribute('name', 'max_tweet_height');
+            } else {
+                // Disable both options for "no_split"
+                tweetsPerImageOption.classList.add('option-disabled');
+                maxTweetHeightOption.classList.add('option-disabled');
+                tweetsPerImageInput.disabled = true;
+                maxTweetHeightInput.disabled = true;
+                tweetsPerImageInput.removeAttribute('name'); // Remove from form submission
+                maxTweetHeightInput.removeAttribute('name'); // Remove from form submission
+            }
+        }
+
+        // Extract tweet ID from input (either raw ID or URL)
+        function extractTweetId(input) {
+            // Check if input is a URL
+            if (input.includes('twitter.com') || input.includes('x.com')) {
+                // Extract the ID from URLs like:
+                // https://twitter.com/username/status/1234567890
+                // https://x.com/username/status/1234567890
+                const parts = input.split('/status/');
+                if (parts.length > 1) {
+                    // Extract just the numeric ID, handling any trailing parameters
+                    const id = parts[1].split(/[?#]/)[0];
+                    return id;
+                }
+                return null; // Invalid URL format
+            }
+            // If not a URL, assume it's already an ID
+            return input.trim();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the option toggle
+            toggleSplitOption();
+            
+            // Fix the form submission to properly include tweet ID
+            const form = document.getElementById('tweet-form');
+            form.addEventListener('htmx:configRequest', function(event) {
+                const input = document.getElementById('tweetId').value;
+                const tweetId = extractTweetId(input);
+                
+                if (!tweetId) {
+                    alert('Invalid tweet URL or ID');
+                    event.preventDefault();
+                    return;
+                }
+                
+                event.detail.path = `http://localhost:8000/imgs/${tweetId}`;
+                
+                // Add class to indicate loading
+                document.getElementById('loading-indicator').classList.remove('hidden');
+            });
+            
+            // Handle successful response
+            document.body.addEventListener('htmx:afterOnLoad', function() {
+                document.getElementById('loading-indicator').classList.add('hidden');
+            });
+        });
+        
+        // Function to handle image display from the response
+        function displayImages(response) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            
+            if (response.images && response.images.length > 0) {
+                // Create carousel container
+                const carouselContainer = document.createElement('div');
+                carouselContainer.className = 'carousel-container bg-gray-700 rounded-lg shadow';
+                
+                // Track current image index
+                let currentImageIndex = 0;
+                const totalImages = response.images.length;
+                
+                // Create image display element
+                const imageDisplay = document.createElement('div');
+                imageDisplay.className = 'relative p-2'; // Add padding to the image wrapper
+                
+                // Create counter display
+                const counter = document.createElement('div');
+                counter.className = 'text-center py-2 text-gray-300';
+                updateCounter();
+                
+                // Add images (only first one visible)
+                response.images.forEach((image, index) => {
+                    const imgWrapper = document.createElement('div');
+                    imgWrapper.className = 'carousel-image ' + (index === 0 ? 'block' : 'hidden');
+                    imgWrapper.dataset.index = index;
+                    
+                    const img = document.createElement('img');
+                    img.src = `data:image/png;base64,${image.content}`;
+                    img.className = 'w-full rounded cursor-pointer img-with-border';
+                    img.onclick = () => showImage((currentImageIndex + 1) % totalImages);
+                    
+                    imgWrapper.appendChild(img);
+                    imageDisplay.appendChild(imgWrapper);
+                });
+                
+                // Add navigation buttons if more than one image
+                if (totalImages > 1) {
+                    const prevButton = document.createElement('button');
+                    prevButton.className = 'carousel-button carousel-prev';
+                    prevButton.innerHTML = `<svg class="carousel-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>`;
+                    prevButton.setAttribute('aria-label', 'Previous image');
+                    prevButton.onclick = () => showImage((currentImageIndex - 1 + totalImages) % totalImages);
+                    
+                    const nextButton = document.createElement('button');
+                    nextButton.className = 'carousel-button carousel-next';
+                    nextButton.innerHTML = `<svg class="carousel-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>`;
+                    nextButton.setAttribute('aria-label', 'Next image');
+                    nextButton.onclick = () => showImage((currentImageIndex + 1) % totalImages);
+                    
+                    carouselContainer.appendChild(prevButton);
+                    carouselContainer.appendChild(nextButton);
+                }
+                
+                // Function to update the counter text
+                function updateCounter() {
+                    counter.textContent = `Image ${currentImageIndex + 1} of ${totalImages}`;
+                }
+                
+                // Function to show a specific image
+                function showImage(index) {
+                    // Hide current image
+                    document.querySelector(`.carousel-image[data-index="${currentImageIndex}"]`).classList.replace('block', 'hidden');
+                    
+                    // Show new image
+                    currentImageIndex = index;
+                    document.querySelector(`.carousel-image[data-index="${currentImageIndex}"]`).classList.replace('hidden', 'block');
+                    
+                    // Update counter
+                    updateCounter();
+                }
+                
+                // Add components to the carousel
+                carouselContainer.appendChild(imageDisplay);
+                carouselContainer.appendChild(counter);
+                
+                // Add carousel to the page
+                resultsDiv.appendChild(carouselContainer);
+                
+                // Add download buttons
+                const downloadContainer = document.createElement('div');
+                downloadContainer.className = 'flex justify-center mt-4 gap-2';
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download All Images';
+                downloadBtn.className = 'bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700';
+                downloadBtn.onclick = () => {
+                    const input = document.getElementById('tweetId').value;
+                    const tweetId = extractTweetId(input);
+                    
+                    response.images.forEach((image, index) => {
+                        const link = document.createElement('a');
+                        link.href = `data:image/png;base64,${image.content}`;
+                        link.download = `twitter-thread-${tweetId}-${index + 1}.png`;
+                        link.click();
+                    });
+                };
+                
+                // Add button to download current image only
+                if (totalImages > 1) {
+                    const downloadCurrentBtn = document.createElement('button');
+                    downloadCurrentBtn.textContent = 'Download Current Image';
+                    downloadCurrentBtn.className = 'bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600';
+                    downloadCurrentBtn.onclick = () => {
+                        const input = document.getElementById('tweetId').value;
+                        const tweetId = extractTweetId(input);
+                        
+                        const link = document.createElement('a');
+                        link.href = `data:image/png;base64,${response.images[currentImageIndex].content}`;
+                        link.download = `twitter-thread-${tweetId}-${currentImageIndex + 1}.png`;
+                        link.click();
+                    };
+                    downloadContainer.appendChild(downloadCurrentBtn);
+                }
+                
+                downloadContainer.appendChild(downloadBtn);
+                resultsDiv.appendChild(downloadContainer);
+                
+                // Add keyboard navigation
+                document.addEventListener('keydown', function(e) {
+                    if (!resultsDiv.contains(document.activeElement)) return;
+                    
+                    if (e.key === 'ArrowLeft') {
+                        showImage((currentImageIndex - 1 + totalImages) % totalImages);
+                    } else if (e.key === 'ArrowRight') {
+                        showImage((currentImageIndex + 1) % totalImages);
+                    }
+                });
+            } else {
+                resultsDiv.innerHTML = '<p class="text-center text-gray-400">No images generated</p>';
+            }
+        }
+        
+        // Add event listener to process JSON response
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            try {
+                const response = JSON.parse(event.detail.xhr.responseText);
+                displayImages(response);
+            } catch (e) {
+                console.error('Failed to parse response', e);
+            }
+        });
+    </script>
+</body>
+</html>

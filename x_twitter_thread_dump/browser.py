@@ -3,7 +3,7 @@ from asyncio import gather
 from collections.abc import AsyncIterator, Iterator
 from contextlib import AsyncExitStack, ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from playwright.async_api import Browser as AsyncBrowser
 from playwright.async_api import async_playwright
@@ -11,7 +11,7 @@ from playwright.sync_api import Browser as SyncBrowser
 from playwright.sync_api import sync_playwright
 
 from .images import bytes_to_image
-from .types import BrowserCtxConfig, ClientBoundingRect, Img
+from .types import BrowserCtxConfig, ClientBoundingRect, Img, Viewport
 
 DEFAULT_CONFIG: BrowserCtxConfig = {
     "color_scheme": "dark",
@@ -165,6 +165,43 @@ def _get_ctx_config(config: BrowserCtxConfig | None = None) -> BrowserCtxConfig:
     return config
 
 
+def get_browser_ctx_config(  # noqa: PLR0913
+    is_mobile: bool | None = None,
+    viewport_height: int | None = None,
+    viewport_width: int | None = None,
+    screen_height: int | None = None,
+    screen_width: int | None = None,
+    device_scale_factor: float | None = None,
+    color_scheme: Literal["dark", "light", "no-preference", "null"] | None = None,
+    contrast: Literal["more", "no-preference", "null"] | None = None,
+    forced_colors: Literal["active", "none", "null"] | None = None,
+    locale: str | None = None,
+    timezone_id: str | None = None,
+) -> BrowserCtxConfig:
+    config = BrowserCtxConfig()
+
+    if is_mobile is not None:
+        config["is_mobile"] = is_mobile
+    if viewport_height is not None and viewport_width is not None:
+        config["viewport"] = Viewport(width=viewport_width, height=viewport_height)
+    if screen_height is not None and screen_width is not None:
+        config["screen"] = Viewport(width=screen_width, height=screen_height)
+    if device_scale_factor is not None:
+        config["device_scale_factor"] = device_scale_factor
+    if color_scheme is not None:
+        config["color_scheme"] = color_scheme
+    if contrast is not None:
+        config["contrast"] = contrast
+    if forced_colors is not None:
+        config["forced_colors"] = forced_colors
+    if locale is not None:
+        config["locale"] = locale
+    if timezone_id is not None:
+        config["timezone_id"] = timezone_id
+
+    return config
+
+
 @dataclass
 class HTMLToImageResult:
     img: Img
@@ -305,6 +342,7 @@ __all__ = [
     "HTMLToImageResult",
     "SyncBrowser",
     "async_browser",
+    "get_browser_ctx_config",
     "html_to_image",
     "html_to_image_async",
 ]

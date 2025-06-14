@@ -5,6 +5,7 @@ from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware import Middleware
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from .router import router
@@ -36,6 +37,13 @@ app = FastAPI(
     docs_url=None,
     middleware=[
         Middleware(GZipMiddleware),
+        Middleware(
+            CORSMiddleware,
+            allow_origins=["*"],  # Allow all origins for debugging purposes
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        ),
     ],
 )
 app.include_router(router)

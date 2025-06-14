@@ -8,7 +8,8 @@ from x_twitter_thread_dump import (
     XTwitterThreadDumpAsyncClient,
     x_twitter_thread_dump_async_client,
 )
-from x_twitter_thread_dump.types import BrowserCtxConfig, Viewport
+from x_twitter_thread_dump.browser import get_browser_ctx_config
+from x_twitter_thread_dump.types import BrowserCtxConfig
 
 from .schemas import TweetID
 from .sharable_brower_ctx import SharableBrowserCtx
@@ -66,7 +67,7 @@ CurrentThreadWithPreviews: TypeAlias = Annotated[
 ]
 
 
-async def get_browser_ctx_config(  # noqa: PLR0913
+async def get_current_browser_ctx_config(  # noqa: PLR0913
     is_mobile: Annotated[bool | None, Query()] = None,
     viewport_height: Annotated[int | None, Query(ge=1, le=2_000)] = None,
     viewport_width: Annotated[int | None, Query(ge=1, le=2_000)] = None,
@@ -79,33 +80,24 @@ async def get_browser_ctx_config(  # noqa: PLR0913
     locale: Annotated[str | None, Query()] = None,
     timezone_id: Annotated[str | None, Query()] = None,
 ) -> BrowserCtxConfig:
-    config = BrowserCtxConfig()
-
-    if is_mobile is not None:
-        config["is_mobile"] = is_mobile
-    if viewport_height is not None and viewport_width is not None:
-        config["viewport"] = Viewport(width=viewport_width, height=viewport_height)
-    if screen_height is not None and screen_width is not None:
-        config["screen"] = Viewport(width=screen_width, height=screen_height)
-    if device_scale_factor is not None:
-        config["device_scale_factor"] = device_scale_factor
-    if color_scheme is not None:
-        config["color_scheme"] = color_scheme
-    if contrast is not None:
-        config["contrast"] = contrast
-    if forced_colors is not None:
-        config["forced_colors"] = forced_colors
-    if locale is not None:
-        config["locale"] = locale
-    if timezone_id is not None:
-        config["timezone_id"] = timezone_id
-
-    return config
+    return get_browser_ctx_config(
+        is_mobile=is_mobile,
+        viewport_height=viewport_height,
+        viewport_width=viewport_width,
+        screen_height=screen_height,
+        screen_width=screen_width,
+        device_scale_factor=device_scale_factor,
+        color_scheme=color_scheme,
+        contrast=contrast,
+        forced_colors=forced_colors,
+        locale=locale,
+        timezone_id=timezone_id,
+    )
 
 
 CurrentBrowserCtxConfig: TypeAlias = Annotated[
     BrowserCtxConfig,
-    Depends(get_browser_ctx_config),
+    Depends(get_current_browser_ctx_config),
 ]
 
 __all__ = [
