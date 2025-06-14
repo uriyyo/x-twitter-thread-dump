@@ -39,7 +39,7 @@ app = FastAPI(
         Middleware(GZipMiddleware),
         Middleware(
             CORSMiddleware,
-            allow_origins=["*"],  # Allow all origins for debugging purposes
+            allow_origins=["https://x-twitter-thread-dump.uriyyo.com"],
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],

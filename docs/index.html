@@ -80,7 +80,7 @@
 
         <div class="max-w-2xl mx-auto bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700">
             <!-- Tweet ID Form -->
-            <form id="tweet-form" class="mb-6" hx-get="http://localhost:8000/imgs/${tweetId.value}" 
+            <form id="tweet-form" class="mb-6" hx-get="https://x-twitter-thread-dump-api.uriyyo.com/imgs/${tweetId.value}"
                   hx-target="#results" hx-indicator="#loading-indicator">
                 <div class="mb-4">
                     <label for="tweetId" class="block text-sm font-medium text-gray-300 mb-1">Tweet ID or URL</label>
@@ -237,18 +237,18 @@
                     return;
                 }
                 
-                event.detail.path = `http://localhost:8000/imgs/${tweetId}`;
+                event.detail.path = `https://x-twitter-thread-dump-api.uriyyo.com/imgs/${tweetId}`;
                 
                 // Add class to indicate loading
                 document.getElementById('loading-indicator').classList.remove('hidden');
             });
-            
+
             // Handle successful response
             document.body.addEventListener('htmx:afterOnLoad', function() {
                 document.getElementById('loading-indicator').classList.add('hidden');
             });
         });
-        
+
         // Function to handle image display from the response
         function displayImages(response) {
             const resultsDiv = document.getElementById('results');
@@ -291,7 +291,7 @@
                 if (totalImages > 1) {
                     const prevButton = document.createElement('button');
                     prevButton.className = 'carousel-button carousel-prev';
-                    prevButton.innerHTML = `<svg class="carousel-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    prevButton.innerHTML = `<svg class="carousel-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>`;
                     prevButton.setAttribute('aria-label', 'Previous image');
@@ -299,7 +299,7 @@
                     
                     const nextButton = document.createElement('button');
                     nextButton.className = 'carousel-button carousel-next';
-                    nextButton.innerHTML = `<svg class="carousel-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    nextButton.innerHTML = `<svg class="carousel-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>`;
                     nextButton.setAttribute('aria-label', 'Next image');
