@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Background - Darker color -->
+  <rect x="0" y="0" width="100" height="100" rx="15" fill="#0C1D2A" />
+  
+  <!-- Centered X logo in modern X style -->
+  <path d="M27,25L43,45L27,75H37L48,53L59,75H73L56,45L73,25H58L48,40L38,25H27z" fill="white" />
+  
+  <!-- Thread icon -->
+  <rect x="65" y="60" width="25" height="4" rx="1" fill="white" opacity="0.9" />
+  <rect x="65" y="70" width="25" height="4" rx="1" fill="white" opacity="0.9" />
+  <rect x="65" y="80" width="25" height="4" rx="1" fill="white" opacity="0.9" />
+</svg>

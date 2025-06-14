@@ -1,0 +1,16 @@
+{
+  "name": "Twitter Thread Image Generator",
+  "short_name": "Thread Images",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#1d9bf0",
+  "background_color": "#111827",
+  "display": "standalone",
+  "start_url": "/"
+}

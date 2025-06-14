@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Sitemap: https://x-twitter-thread-dump.uriyyo.com/sitemap.xml
+
+# Google specific
+User-agent: Googlebot
+Allow: /
+
+# Bing specific
+User-agent: Bingbot
+Allow: /
+
+# Yahoo specific
+User-agent: Slurpbot
+Allow: /
+
+# DuckDuckGo (uses Bing's index)
+User-agent: DuckDuckBot
+Allow: /
