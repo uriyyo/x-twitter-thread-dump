@@ -555,7 +555,7 @@
         </div>
     </div>
     {% else %}
-    <div class="tweet {% if is_single_tweet %}single-tweet{% endif %}">
+    <div class="tweet {% if is_single_tweet %}single-tweet{% endif %} container-item">
         <div class="avatar-column">
             <img src="{{ render_media_src(tweet_item.user.avatar) }}" alt="{{ tweet_item.user.username }} avatar" class="avatar">
             {# Show connector if it's NOT the last in thread OR if show_connector_on_last is true and it IS the last #}
@@ -626,7 +626,7 @@
     {% endif %}
 {% endmacro %}
 
-<div class="thread-container">
+<div class="thread-container main-container">
     {% for tweet in thread %}
         {# Pass show_connector_on_last from the context, default to false if not provided #}
         {{ render_tweet_macro(tweet, is_quoted_tweet=False, is_last_in_thread=loop.last, is_single_tweet=(is_single_tweet|default(false)), show_connector_on_last=show_connector_on_last|default(false)) }}

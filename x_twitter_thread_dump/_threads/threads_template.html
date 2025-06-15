@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threads</title>
+    <style>
+        :root {
+            --bg-color: rgb(16, 16, 16);
+            --text-color: #000;
+            --secondary-text: #737373;
+            --icon-color: #8e8e8e; /* New variable for icons - lighter than secondary text */
+            --border-color: #efefef;
+            --card-bg: #fff;
+            --accent-color: #0095f6;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: rgb(16, 16, 16);
+                --text-color: #fff;
+                --secondary-text: #a8a8a8;
+                --icon-color: #bfbfbf; /* New variable for icons - whiter than secondary text in dark mode */
+                --border-color: #262626;
+                --card-bg: #000;
+                --accent-color: #0095f6;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.4;
+        }
+
+        .threads-container {
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        .thread-post {
+            padding: 8px 0; /* Reduced padding to make gaps smaller */
+            display: flex; /* Create a two-column layout */
+        }
+
+        /* Avatar column styles */
+        .avatar-column {
+            width: 48px;
+            flex-shrink: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            outline-offset: -.5px;
+            outline: 0.5px solid rgba(243, 245, 247, 0.15);
+        }
+
+        .avatar-container {
+            position: relative; /* Added to contain the absolutely positioned plus button */
+            display: inline-block; /* Ensures the container wraps around the avatar */
+        }
+
+        /* Plus button on avatar */
+        .avatar-plus {
+            position: absolute;
+            bottom: 3px;
+            right: -4px;
+            width: 18px;
+            height: 18px;
+            background-color: #fff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #000;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+            line-height: 1;
+            border: 1.5px solid var(--bg-color);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .avatar-plus {
+                background-color: #fff;
+                color: #000;
+            }
+        }
+
+        /* Content column styles */
+        .content-column {
+            flex-grow: 1;
+            width: calc(100% - 48px);
+            padding-left: 0; /* Reset padding to ensure alignment */
+            padding-right: 10px;
+        }
+
+        .thread-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-left: 0; /* Reset padding to ensure alignment */
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-meta {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            margin-left: 0; /* Remove left margin to align with post content */
+        }
+
+        .username {
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .username .verified {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            background-color: var(--text-color);
+            border-radius: 50%;
+            position: relative;
+            margin-left: 2px;
+        }
+
+        .username .verified::after {
+            content: "✓";
+            color: var(--bg-color);
+            position: absolute;
+            top: -1px;
+            left: 3px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        .thread-actions {
+            color: var(--secondary-text);
+            font-size: 12px;
+        }
+
+        .post-time {
+            font-size: 12px;
+            color: var(--secondary-text);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .post-time::after {
+            content: "·";
+            font-weight: bold;
+            margin-left: 4px;
+            display: none;
+        }
+
+        .post-content {
+            margin-bottom: 12px;
+            padding-left: 0; /* Reset padding to ensure alignment */
+        }
+
+        .post-text {
+            font-size: 15px;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+
+        .post-text a, .post-text .hashtag, .post-text .mention {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .thread-line {
+            width: 2px;
+            background-color: var(--border-color);
+            flex-grow: 1;
+            margin-top: 8px; /* Space between avatar and line */
+        }
+
+        .last-post .thread-line {
+            display: none;
+        }
+
+        .post-media {
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            display: grid;
+            gap: 1px;
+            grid-auto-rows: 1fr; /* Ensure rows have equal height */
+        }
+
+        .post-media img, .post-media video {
+            width: 100%;
+            height: 100%; /* Fill the container completely */
+            object-fit: cover; /* Cover the area while maintaining aspect ratio */
+        }
+
+        .post-media.media-count-1 {
+            grid-template-columns: 1fr;
+        }
+
+        .post-media.media-count-2 {
+            grid-template-columns: 1fr 1fr;
+            aspect-ratio: 2 / 1; /* Maintain a 2:1 aspect ratio for the container */
+        }
+
+        .post-media.media-count-3 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            aspect-ratio: 2 / 2; /* Square overall container */
+        }
+
+        .post-media.media-count-3 > :first-child {
+            grid-row: 1 / span 2;
+        }
+
+        .post-media.media-count-4 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            aspect-ratio: 2 / 2; /* Square overall container */
+        }
+
+        .media-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%; /* Ensure the wrapper fills its grid cell */
+        }
+
+        .play-button-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            color: white;
+        }
+
+        .quoted-thread {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .quoted-thread .avatar {
+            width: 24px;
+            height: 24px;
+        }
+
+        .quoted-thread .post-content {
+            margin-left: 0;
+        }
+
+        .quoted-thread .post-text {
+            font-size: 14px;
+        }
+
+        .post-engagement {
+            display: flex;
+            gap: 20px;
+        }
+
+        .engagement-item {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            color: var(--secondary-text);
+            font-size: 13px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .engagement-item:hover {
+            color: var(--accent-color);
+        }
+
+        .engagement-item:hover .icon svg {
+            stroke: var(--accent-color);
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: var(--icon-color); /* Using the new icon color variable instead of secondary-text */
+            transition: stroke 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+{% macro format_count(count) %}
+{% if count is none or count == 0 %}
+{% elif count >= 1000000 %}
+{{ "%.1f"|format(count/1000000)|replace('.0', '') }}M
+{% elif count >= 1000 %}
+{{ "%.1f"|format(count/1000)|replace('.0', '') }}K
+{% else %}
+{{ count }}
+{% endif %}
+{% endmacro %}
+
+{% macro render_media_src(media_item) %}
+{% if media_item.raw_preview_bytes and media_item.raw_preview_bytes | length > 0 %}
+data:image/jpeg;base64,{{ media_item.raw_preview_bytes | b64encode | string }}
+{% else %}
+{{ media_item.preview_url }}
+{% endif %}
+{% endmacro %}
+
+{%- macro format_post_text(text) -%}
+{%- set text = text | regex_replace("(#\\w+)", '<span class="hashtag">\\1</span>') -%}
+{%- set text = text | regex_replace("(@[a-zA-Z0-9_\-]+)", '<span class="mention">\\1</span>') -%}
+{%- set text = text | regex_replace("(https?://[\\w./?&=]+)", '<a href="\\1" target="_blank">\\1</a>') -%}
+{{- text | safe -}}
+{%- endmacro -%}
+
+{% macro render_post(post_item, is_quoted=False, is_last=False) %}
+<div class="thread-post{% if is_last %} last-post{% endif %} container-item">
+    {% if not is_quoted %}
+    <div class="avatar-column">
+        <div class="avatar-container">
+            <img src="{{ render_media_src(post_item.user.profile_pic) }}" alt="{{ post_item.user.username }}"
+                 class="avatar">
+            <div class="avatar-plus">
+                <svg role="img" viewBox="0 0 10 9" class="x1lliihq x2lah0s x1f5funs x1n2onr6 x1bl4301 x15rks2t x117rol3" style="--fill: currentColor; --height: 10px; --width: 10px; width: 10px"><path d="M4.99512 8.66895C4.64355 8.66895 4.35059 8.36621 4.35059 8.03418V5.12891H1.50391C1.17188 5.12891 0.864258 4.83594 0.864258 4.47949C0.864258 4.12793 1.17188 3.83008 1.50391 3.83008H4.35059V0.924805C4.35059 0.583008 4.64355 0.290039 4.99512 0.290039C5.35156 0.290039 5.64453 0.583008 5.64453 0.924805V3.83008H8.49121C8.83301 3.83008 9.13086 4.12793 9.13086 4.47949C9.13086 4.83594 8.83301 5.12891 8.49121 5.12891H5.64453V8.03418C5.64453 8.36621 5.35156 8.66895 4.99512 8.66895Z"></path></svg>
+            </div>
+        </div>
+        {% if not is_last %}
+        <div class="thread-line"></div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="content-column">
+        <div class="thread-header">
+            <div class="user-info">
+                <div class="user-meta">
+                    <div class="username">
+                        {{ post_item.user.username }}
+                        {% if post_item.user.is_verified %}
+                        <span class="verified"></span>
+                        {% endif %}
+                    </div>
+                    <div class="post-time">
+                        {{ post_item.taken_at.strftime('%b %d') }}
+                    </div>
+                </div>
+            </div>
+            <div class="thread-actions">
+                •••
+            </div>
+        </div>
+
+        <div class="post-content">
+            {% if post_item.caption %}
+            <div class="post-text">{{ format_post_text(post_item.caption) }}</div>
+            {% endif %}
+
+            {% if post_item.media %}
+            {% set media_count = post_item.media | length %}
+            {% set media_class = 'media-count-' + ((media_count|string) if media_count <= 4 else '4') %}
+            <div class="post-media {{ media_class }}">
+                {% for media_item in post_item.media %}
+                {% if media_item.type == 'video' %}
+                <div class="media-wrapper">
+                    <img src="{{ render_media_src(media_item) }}" alt="Video preview">
+                    <div class="play-button-overlay">▶</div>
+                </div>
+                {% else %}
+                <img src="{{ render_media_src(media_item) }}" alt="Image">
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if post_item.quoted_thread and not is_quoted %}
+            <div class="quoted-thread">
+                {{ render_post(post_item.quoted_thread, is_quoted=True) }}
+            </div>
+            {% endif %}
+        </div>
+
+        {% if not is_quoted %}
+        <div class="post-engagement">
+            <div class="engagement-item">
+                <div class="icon">
+                    <svg role="img" viewBox="0 0 18 18">
+                        <path d="M1.34375 7.53125L1.34375 7.54043C1.34374 8.04211 1.34372 8.76295 1.6611 9.65585C1.9795 10.5516 2.60026 11.5779 3.77681 12.7544C5.59273 14.5704 7.58105 16.0215 8.33387 16.5497C8.73525 16.8313 9.26573 16.8313 9.66705 16.5496C10.4197 16.0213 12.4074 14.5703 14.2232 12.7544C15.3997 11.5779 16.0205 10.5516 16.3389 9.65585C16.6563 8.76296 16.6563 8.04211 16.6562 7.54043V7.53125C16.6562 5.23466 15.0849 3.25 12.6562 3.25C11.5214 3.25 10.6433 3.78244 9.99228 4.45476C9.59009 4.87012 9.26356 5.3491 9 5.81533C8.73645 5.3491 8.40991 4.87012 8.00772 4.45476C7.35672 3.78244 6.47861 3.25 5.34375 3.25C2.9151 3.25 1.34375 5.23466 1.34375 7.53125Z"
+                              stroke-width="1.25"></path>
+                    </svg>
+                </div>
+                {{ format_count(post_item.like_count) }}
+            </div>
+            <div class="engagement-item">
+                <div class="icon">
+                    <svg role="img" viewBox="0 0 18 18">
+                        <path d="M15.376 13.2177L16.2861 16.7955L12.7106 15.8848C12.6781 15.8848 12.6131 15.8848 12.5806 15.8848C11.3779 16.5678 9.94767 16.8931 8.41995 16.7955C4.94194 16.5353 2.08152 13.7381 1.72397 10.2578C1.2689 5.63919 5.13697 1.76863 9.75264 2.22399C13.2307 2.58177 16.0261 5.41151 16.2861 8.92429C16.4161 10.453 16.0586 11.8841 15.376 13.0876C15.376 13.1526 15.376 13.1852 15.376 13.2177Z"
+                              stroke-linejoin="round" stroke-width="1.25"></path>
+                    </svg>
+                </div>
+                {{ format_count(post_item.direct_reply_count) }}
+            </div>
+            <div class="engagement-item">
+                <div class="icon">
+                    <svg role="img" viewBox="0 0 18 18">
+                        <title>Зробити репост</title>
+                        <polyline points="12.75 0.75 15.75 3.75 12.75 6.75" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"></polyline>
+                        <path d="M2.25 8.25V6.75A3 3 0 0 1 5.25 3.75H15.75" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+                        <polyline points="5.25 17.25 2.25 14.25 5.25 11.25" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"></polyline>
+                        <path d="M15.75 9.75V11.25A3 3 0 0 1 12.75 14.25H2.25" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+                    </svg>
+                </div>
+                {{ format_count(post_item.repost_count + post_item.quote_count) }}
+            </div>
+            <div class="engagement-item">
+                <div class="icon">
+                    <svg role="img" viewBox="0 0 18 18">
+                        <path d="M15.6097 4.09082L6.65039 9.11104" stroke-linejoin="round" stroke-width="1.25"></path>
+                        <path d="M7.79128 14.439C8.00463 15.3275 8.11131 15.7718 8.33426 15.932C8.52764 16.071 8.77617 16.1081 9.00173 16.0318C9.26179 15.9438 9.49373 15.5501 9.95761 14.7628L15.5444 5.2809C15.8883 4.69727 16.0603 4.40546 16.0365 4.16566C16.0159 3.95653 15.9071 3.76612 15.7374 3.64215C15.5428 3.5 15.2041 3.5 14.5267 3.5H3.71404C2.81451 3.5 2.36474 3.5 2.15744 3.67754C1.97758 3.83158 1.88253 4.06254 1.90186 4.29856C1.92415 4.57059 2.24363 4.88716 2.88259 5.52032L6.11593 8.7243C6.26394 8.87097 6.33795 8.94431 6.39784 9.02755C6.451 9.10144 6.4958 9.18101 6.53142 9.26479C6.57153 9.35916 6.59586 9.46047 6.64451 9.66309L7.79128 14.439Z"
+                              stroke-linejoin="round" stroke-width="1.25"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+<div class="threads-container main-container">
+    {% for post in thread %}
+    {{ render_post(post, is_last=loop.last) }}
+    {% endfor %}
+</div>
+
+</body>
+</html>

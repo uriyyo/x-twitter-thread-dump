@@ -34,8 +34,9 @@ class BaseXTwitterThreadDumpClient:
             },
         }
 
+    @classmethod
     def prepare_result_img(
-        self,
+        cls,
         res: HTMLToImageResult,
         *,
         tweets_per_image: int | None = None,
