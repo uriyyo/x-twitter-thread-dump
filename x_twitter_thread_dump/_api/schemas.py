@@ -22,7 +22,7 @@ class MediaSchema(BaseSchema):
     type: Literal["image", "video"]
 
 
-class TweetImagesSchema(BaseSchema):
+class ImagesSchema(BaseSchema):
     images: list[Base64ImageSchema]
     media: list[MediaSchema] | None = None
 
@@ -74,9 +74,9 @@ class TweetSchema(BaseSchema):
 
 __all__ = [
     "Base64ImageSchema",
+    "ImagesSchema",
     "MediaSchema",
     "TweetID",
-    "TweetImagesSchema",
     "TweetMediaSchema",
     "TweetSchema",
     "TweetUserSchema",

@@ -16,7 +16,7 @@ from .dependencies import (
     CurrentThreadClient,
     CurrentThreadWithPreviews,
 )
-from .schemas import Base64ImageSchema, MediaSchema, TweetID, TweetImagesSchema, TweetSchema
+from .schemas import Base64ImageSchema, ImagesSchema, MediaSchema, TweetID, TweetSchema
 from .settings import settings
 from .utils import limit_concurrency
 
@@ -85,7 +85,7 @@ async def get_tweet_imgs(  # noqa: PLR0913
     include_media: Annotated[bool, Query()] = False,
     tweets_per_image: Annotated[int | None, Query(ge=1, le=10)] = None,
     max_tweet_height: Annotated[int | None, Query(ge=1, le=10_000)] = None,
-) -> TweetImagesSchema:
+) -> ImagesSchema:
     html = render_thread_html(thread)
     result = await render_html(browser_ctx, chunk=html, config=config)
 
@@ -101,7 +101,7 @@ async def get_tweet_imgs(  # noqa: PLR0913
 
     images = [Base64ImageSchema(content=image_to_base64str(img)) for img in imgs]
 
-    return TweetImagesSchema(
+    return ImagesSchema(
         images=images,
         media=media,
     )

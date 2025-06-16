@@ -323,8 +323,8 @@ async def html_to_image_async(
         await page.wait_for_load_state(state="domcontentloaded")
 
         screenshot, rects = await gather(
-            page.locator(".thread-container").screenshot(),
-            page.locator(".thread-container > .tweet").evaluate_all(
+            page.locator(".main-container").screenshot(),
+            page.locator(".main-container > .container-item").evaluate_all(
                 "(tweets) => tweets.map(el => el.getBoundingClientRect())"
             ),
         )

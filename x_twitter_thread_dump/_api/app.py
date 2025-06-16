@@ -8,6 +8,7 @@ from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
+from ._threads import router as threads_router
 from .router import router
 from .sharable_brower_ctx import SharableBrowserCtx
 
@@ -47,3 +48,4 @@ app = FastAPI(
     ],
 )
 app.include_router(router)
+app.include_router(threads_router)
