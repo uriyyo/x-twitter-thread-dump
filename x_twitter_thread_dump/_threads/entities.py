@@ -127,13 +127,17 @@ class ThreadPost:
             case {
                 "id": id_,
                 "user": user,
-                "caption": {
-                    "text": caption_text,
-                },
+                "caption": caption,
                 "text_post_app_info": post_app_info,
                 "taken_at": taken_at,
                 **rest,
             }:
+                match caption:
+                    case {"text": _caption_text}:
+                        caption_text = _caption_text
+                    case _:
+                        caption_text = ""
+
                 match post_app_info:
                     case {
                         "quote_count": _quote_count,
