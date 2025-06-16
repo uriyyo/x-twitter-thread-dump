@@ -337,6 +337,7 @@ data:image/jpeg;base64,{{ media_item.raw_preview_bytes | b64encode | string }}
 {%- set text = text | regex_replace("(#\\w+)", '<span class="hashtag">\\1</span>') -%}
 {%- set text = text | regex_replace("(@[a-zA-Z0-9_\-]+)", '<span class="mention">\\1</span>') -%}
 {%- set text = text | regex_replace("(https?://[\\w./?&=]+)", '<a href="\\1" target="_blank">\\1</a>') -%}
+{%- set text = text | regex_replace("(\w+\.[\\w./?&=]+)", '<a href="\\1" target="_blank">\\1</a>') -%}
 {{- text | safe -}}
 {%- endmacro -%}
 
