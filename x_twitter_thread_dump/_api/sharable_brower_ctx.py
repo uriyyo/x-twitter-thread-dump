@@ -25,8 +25,13 @@ type _LockFactory = Callable[[], RWLock]
 class _CurrentBrowserContext:
     stack: AsyncExitStack
     browser: AsyncBrowser
+    lifetime: timedelta
     expired_at: datetime
     close_task: asyncio.Task[Any] | None = None
+
+    @property
+    def age(self) -> timedelta:
+        return datetime.now() - (self.expired_at - self.lifetime)
 
     @property
     def is_expired(self) -> bool:
@@ -75,6 +80,7 @@ class SharableBrowserCtx:
     def _get_expired_at(self) -> datetime:
         return datetime.now() + self.lifetime
 
+    @logfire.instrument
     async def _create_new_ctx(self) -> _CurrentBrowserContext:
         async with self._rw_lock.writer:
             if self.ctx and not self.ctx.is_expired:
@@ -89,6 +95,7 @@ class SharableBrowserCtx:
             self.ctx = _CurrentBrowserContext(
                 stack=stack,
                 browser=browser,
+                lifetime=self.lifetime,
                 expired_at=self._get_expired_at(),
             )
             self.ctx.schedule_close(get_lock=lambda: self._rw_lock)
@@ -97,7 +104,6 @@ class SharableBrowserCtx:
             return self.ctx
 
     @asynccontextmanager
-    @logfire.instrument("acquire browser context", allow_generator=True)
     async def acquire(self, *, _final: bool = False) -> AsyncIterator[AsyncBrowser]:
         if self.ctx is None or self.ctx.is_expired:
             await self._create_new_ctx()
@@ -111,7 +117,7 @@ class SharableBrowserCtx:
                 cell_empty = True
             elif self.ctx:
                 shared_browser_age.record(
-                    (datetime.now() - self.ctx.expired_at).total_seconds(),
+                    max(0, int(self.ctx.age.total_seconds())),
                 )
 
                 yield self.ctx.browser
