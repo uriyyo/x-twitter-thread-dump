@@ -60,6 +60,8 @@ ignore = [
     "ASYNC109",  # timeout in async functions
     "FAST003",   # path param not in signature
     "UP040",     # use type keyword for type aliases
+    "S602",      # maybe unsafe shell
+    "S607",      # partial executable path
 
     # full rule exclude
     "D",   # ignore docstrings

@@ -1,5 +1,6 @@
 from typing import Annotated, Any
 
+import logfire
 from fastapi import APIRouter, Query
 from fastapi.responses import HTMLResponse, Response
 
@@ -16,6 +17,7 @@ from .dependencies import (
     CurrentThreadClient,
     CurrentThreadWithPreviews,
 )
+from .metrics import measure_html_render_duration
 from .schemas import Base64ImageSchema, ImagesSchema, MediaSchema, TweetID, TweetSchema
 from .settings import settings
 from .utils import limit_concurrency
@@ -62,17 +64,19 @@ async def get_tweet_html(
 
 
 @limit_concurrency(settings.IMAGE_RENDERING_CONCURRENCY)
+@logfire.instrument()
 async def render_html(
     browser_ctx: CurrentSharableBrowserCtx,
     chunk: str,
     config: BrowserCtxConfig | None = None,
 ) -> HTMLToImageResult:
     async with browser_ctx.acquire() as browser:
-        return await html_to_image_async(
-            chunk,
-            browser=browser,
-            config=config,
-        )
+        with measure_html_render_duration():
+            return await html_to_image_async(
+                chunk,
+                browser=browser,
+                config=config,
+            )
 
 
 @router.get("/imgs/{tweet_id}")

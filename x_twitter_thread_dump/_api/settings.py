@@ -1,3 +1,6 @@
+import subprocess
+
+import logfire
 from pydantic_settings import BaseSettings
 
 
@@ -15,12 +18,21 @@ class Settings(BaseSettings):
 settings = Settings()
 
 if settings.LOGFIRE_TOKEN:
-    import logfire
+
+    def _get_current_revision() -> str | None:
+        try:
+            return subprocess.check_output("git rev-parse HEAD", shell=True, text=True).strip()
+        except subprocess.CalledProcessError:
+            return None
 
     logfire.configure(
         token=settings.LOGFIRE_TOKEN,
         service_name="x-twitter-thread-dump",
         environment="production",
+        code_source=logfire.CodeSource(
+            repository="https://github.com/uriyyo/x-twitter-thread-dump",
+            revision=_get_current_revision() or "main",
+        ),
     )
 
 __all__ = [

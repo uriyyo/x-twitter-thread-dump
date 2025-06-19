@@ -9,8 +9,10 @@ from datetime import datetime, timedelta
 from functools import cached_property
 from typing import Any, Self
 
+import logfire
 from aiorwlock import RWLock
 
+from x_twitter_thread_dump._api.metrics import shared_browser_age
 from x_twitter_thread_dump.browser import AsyncBrowser, async_browser
 
 logger = logging.getLogger(__name__)
@@ -95,6 +97,7 @@ class SharableBrowserCtx:
             return self.ctx
 
     @asynccontextmanager
+    @logfire.instrument("acquire browser context", allow_generator=True)
     async def acquire(self, *, _final: bool = False) -> AsyncIterator[AsyncBrowser]:
         if self.ctx is None or self.ctx.is_expired:
             await self._create_new_ctx()
@@ -107,6 +110,10 @@ class SharableBrowserCtx:
             if self.ctx is None and not _final:
                 cell_empty = True
             elif self.ctx:
+                shared_browser_age.record(
+                    (datetime.now() - self.ctx.expired_at).total_seconds(),
+                )
+
                 yield self.ctx.browser
                 return
 

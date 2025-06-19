@@ -54,3 +54,4 @@ app.include_router(threads_router)
 
 logfire.instrument_fastapi(app)
 logfire.instrument_httpx()
+logfire.instrument_pydantic()
