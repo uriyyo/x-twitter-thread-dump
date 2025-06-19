@@ -15,8 +15,8 @@ class Media:
     preview_url: str
     type: Literal["image", "video"]
 
-    raw_data: AnyDict | None = None
-    raw_preview_bytes: bytes | None = None
+    raw_data: AnyDict | None = field(default=None, repr=False)
+    raw_preview_bytes: bytes | None = field(default=None, repr=False)
 
     @classmethod
     def from_raw_response(cls, raw_data: AnyDict, /) -> Self:
@@ -83,7 +83,7 @@ class User:
     is_blue_verified: bool = False
     avatar: Media | None = None
 
-    raw_data: AnyDict | None = None
+    raw_data: AnyDict | None = field(default=None, repr=False)
 
     @classmethod
     def from_raw_response(cls, raw_data: AnyDict, /) -> Self:
@@ -168,7 +168,7 @@ class Tweet:
 
     media: list[Media] = field(default_factory=list)
 
-    raw_data: AnyDict | None = None
+    raw_data: AnyDict | None = field(default=None, repr=False)
 
     def all_media(self) -> Iterable[Media]:
         yield from self.media

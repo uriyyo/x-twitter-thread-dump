@@ -12,8 +12,8 @@ class ThreadMedia:
     preview_url: str
     type: Literal["image", "video"]
 
-    raw_data: AnyDict | None = None
-    raw_preview_bytes: bytes | None = None
+    raw_data: AnyDict | None = field(default=None, repr=False)
+    raw_preview_bytes: bytes | None = field(default=None, repr=False)
 
     @classmethod
     def from_raw_response(cls, raw_data: AnyDict, /) -> Self:
@@ -68,7 +68,7 @@ class ThreadUser:
     is_verified: bool
     profile_pic: ThreadMedia
 
-    raw_data: AnyDict | None = None
+    raw_data: AnyDict | None = field(default=None, repr=False)
 
     @classmethod
     def from_raw_response(cls, raw_data: AnyDict, /) -> Self:
@@ -115,7 +115,7 @@ class ThreadPost:
     media: list[ThreadMedia] = field(default_factory=list)
     quoted_thread: Self | None = None
 
-    raw_data: AnyDict | None = None
+    raw_data: AnyDict | None = field(default=None, repr=False)
 
     @classmethod
     def from_raw_response(cls, raw_data: AnyDict, /) -> Self:

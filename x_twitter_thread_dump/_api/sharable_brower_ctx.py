@@ -80,7 +80,7 @@ class SharableBrowserCtx:
     def _get_expired_at(self) -> datetime:
         return datetime.now() + self.lifetime
 
-    @logfire.instrument
+    @logfire.instrument("create new browser ctx")
     async def _create_new_ctx(self) -> _CurrentBrowserContext:
         async with self._rw_lock.writer:
             if self.ctx and not self.ctx.is_expired:
