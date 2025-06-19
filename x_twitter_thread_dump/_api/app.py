@@ -3,6 +3,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
+import logfire
 from fastapi import FastAPI
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,3 +50,7 @@ app = FastAPI(
 )
 app.include_router(router)
 app.include_router(threads_router)
+
+
+logfire.instrument_fastapi(app)
+logfire.instrument_httpx()

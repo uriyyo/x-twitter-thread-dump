@@ -166,6 +166,7 @@ def _get_ctx_config(config: BrowserCtxConfig | None = None) -> BrowserCtxConfig:
 
 
 def get_browser_ctx_config(  # noqa: PLR0913
+    *,
     is_mobile: bool | None = None,
     viewport_height: int | None = None,
     viewport_width: int | None = None,
