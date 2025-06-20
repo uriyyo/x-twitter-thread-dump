@@ -25,6 +25,13 @@ from .utils import limit_concurrency
 router = APIRouter()
 
 
+@router.get("/")
+def main_route() -> dict[str, str]:
+    return {
+        "message": "Welcome to the X Twitter Thread Dump API!",
+    }
+
+
 @router.get(
     "/json/{tweet_id}",
     response_model=list[TweetSchema],

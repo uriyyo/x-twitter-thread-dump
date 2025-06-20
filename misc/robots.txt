@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /
+Sitemap: https://x-twitter-thread-dump-api.uriyyo.com/sitemap.xml
