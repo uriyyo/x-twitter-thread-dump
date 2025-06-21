@@ -1,8 +1,9 @@
-from asyncio import gather
+from asyncio import Semaphore, gather
 from collections import defaultdict
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from contextlib import AbstractAsyncContextManager, asynccontextmanager, nullcontext
+from dataclasses import InitVar, dataclass, field
+from typing import Any
 
 from httpx import AsyncClient, AsyncHTTPTransport
 from x_client_transaction import ClientTransaction
@@ -53,6 +54,17 @@ async def _get_guest_token(client: AsyncClient) -> str:
 @dataclass(kw_only=True)
 class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
     client: AsyncClient
+
+    _limit_ctx: AbstractAsyncContextManager[Any] = field(init=False)
+    download_timeout: float = 30
+
+    download_concurrency: InitVar[int | None] = 5
+
+    def __post_init__(self, download_concurrency: int | None) -> None:
+        if download_concurrency is None:
+            self._limit_ctx = nullcontext()
+        else:
+            self._limit_ctx = Semaphore(download_concurrency)
 
     async def get_thread(
         self,
@@ -110,7 +122,7 @@ class XTwitterThreadDumpAsyncClient(BaseXTwitterThreadDumpClient):
             urls[media.preview_url].append(media)
 
         async def _worker(url: str, /) -> None:
-            async with self.client.stream("GET", url) as response:
+            async with self._limit_ctx, self.client.stream("GET", url, timeout=self.download_timeout) as response:
                 response.raise_for_status()
                 content = await response.aread()
 
