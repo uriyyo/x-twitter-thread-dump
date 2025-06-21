@@ -16,7 +16,7 @@ from .types import BrowserCtxConfig, ClientBoundingRect, Img, Viewport
 DEFAULT_CONFIG: BrowserCtxConfig = {
     "color_scheme": "dark",
     "viewport": {"width": 500, "height": 1000},
-    "device_scale_factor": 2.0,
+    "device_scale_factor": 1.5,
     "is_mobile": True,
     "locale": "en-US",
     "offline": True,
@@ -129,7 +129,7 @@ BROWSER_RUN_ARGS = [
     "--disable-reading-from-canvas",  # Disable canvas readback
     "--enable-tab-discarding",  # Allow discarding tabs to save memory
     "--js-flags=--lite-mode --jitless --no-opt",  # Extreme JS memory optimization
-    "--force-gpu-mem-available-mb=32",  # Limit GPU memory
+    # "--force-gpu-mem-available-mb=32",  # Limit GPU memory | warn! This flag cause issues with long threads rendering
     "--disable-font-subpixel-positioning",  # Disable font subpixel positioning
     "--disable-composited-antialiasing",  # Disable composited antialiasing
     "--disable-zero-copy",  # Disable zero-copy texture uploads

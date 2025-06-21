@@ -62,6 +62,7 @@ ignore = [
     "UP040",     # use type keyword for type aliases
     "S602",      # maybe unsafe shell
     "S607",      # partial executable path
+    "ERA001",    # allow commented-out code
 
     # full rule exclude
     "D",   # ignore docstrings
