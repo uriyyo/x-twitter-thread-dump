@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     }
 
     IMAGE_RENDERING_CONCURRENCY: int = 10
+    IMAGE_RENDERING_RETRIES: int = 3
     LOGFIRE_TOKEN: str | None = None
 
 

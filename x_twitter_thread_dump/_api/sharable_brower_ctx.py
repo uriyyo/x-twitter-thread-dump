@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator
 from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -11,14 +11,12 @@ from typing import Any, Self
 
 import logfire
 from aiorwlock import RWLock
+from playwright._impl._errors import TargetClosedError
 
 from x_twitter_thread_dump._api.metrics import shared_browser_age
 from x_twitter_thread_dump.browser import AsyncBrowser, async_browser
 
 logger = logging.getLogger(__name__)
-
-
-type _LockFactory = Callable[[], RWLock]
 
 
 @dataclass
@@ -27,6 +25,7 @@ class _CurrentBrowserContext:
     browser: AsyncBrowser
     lifetime: timedelta
     expired_at: datetime
+    rw_lock: RWLock
     close_task: asyncio.Task[Any] | None = None
 
     @property
@@ -43,25 +42,24 @@ class _CurrentBrowserContext:
     async def safe_aclose(
         self,
         *,
-        get_lock: _LockFactory,
-        add_delay: bool = True,
+        posponed: bool = False,
     ) -> None:
-        if add_delay:
+        if posponed:
             initial_delay = (self.expired_at - datetime.now()).total_seconds()
             await asyncio.sleep(initial_delay)
 
-        async with get_lock().writer:
+        async with self.rw_lock.writer:
             logger.info("Closing browser context")
             await self.aclose()
             logger.info("Browser context closed")
 
-    def schedule_close(self, *, get_lock: _LockFactory) -> None:
+    def schedule_close(self) -> None:
         if self.close_task is not None:
             self.close_task.cancel()
             self.close_task = None
 
         self.close_task = asyncio.create_task(
-            self.safe_aclose(get_lock=get_lock),
+            self.safe_aclose(posponed=True),
             name="browser-context-close-task",
         )
 
@@ -97,14 +95,14 @@ class SharableBrowserCtx:
                 browser=browser,
                 lifetime=self.lifetime,
                 expired_at=self._get_expired_at(),
+                rw_lock=self._rw_lock,
             )
-            self.ctx.schedule_close(get_lock=lambda: self._rw_lock)
 
             logger.info("New browser context created")
             return self.ctx
 
     @asynccontextmanager
-    async def acquire(self, *, _final: bool = False) -> AsyncIterator[AsyncBrowser]:
+    async def _acquire(self, *, _final: bool = False) -> AsyncIterator[AsyncBrowser]:
         if self.ctx is None or self.ctx.is_expired:
             await self._create_new_ctx()
         else:
@@ -128,8 +126,20 @@ class SharableBrowserCtx:
 
         logger.info("Browser context is empty, try to call resolver again (final call)")
 
-        async with self.acquire(_final=True) as browser:
+        async with self._acquire(_final=True) as browser:
             yield browser
+
+    @asynccontextmanager
+    async def acquire(self) -> AsyncIterator[AsyncBrowser]:
+        try:
+            async with self._acquire() as browser:
+                yield browser
+        except TargetClosedError:
+            if self.ctx:
+                logger.warning("Target closed error, force closing browser context")
+                await self.ctx.safe_aclose()
+
+            raise
 
     async def __aenter__(self) -> Self:
         return self
@@ -144,10 +154,8 @@ class SharableBrowserCtx:
             self.ctx.close_task.cancel()
             self.ctx.close_task = None
 
-        await self.ctx.safe_aclose(
-            get_lock=lambda: self._rw_lock,
-            add_delay=False,
-        )
+        await self.ctx.safe_aclose()
+        self.ctx = None
 
 
 __all__ = [

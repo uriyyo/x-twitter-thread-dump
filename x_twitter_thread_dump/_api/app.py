@@ -11,6 +11,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 from ._threads import router as threads_router
 from .router import router
+from .settings import settings
 from .sharable_brower_ctx import SharableBrowserCtx
 
 logging.basicConfig(
@@ -51,8 +52,8 @@ app = FastAPI(
 app.include_router(router)
 app.include_router(threads_router)
 
-
-logfire.instrument_fastapi(app)
-logfire.instrument_httpx()
-logfire.instrument_pydantic()
-logfire.instrument_system_metrics()
+if settings.LOGFIRE_TOKEN:
+    logfire.instrument_fastapi(app)
+    logfire.instrument_httpx()
+    logfire.instrument_pydantic()
+    logfire.instrument_system_metrics()
