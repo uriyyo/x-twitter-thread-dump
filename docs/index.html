@@ -129,7 +129,7 @@
 
         <div class="max-w-2xl mx-auto bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700">
             <!-- Tweet ID Form -->
-            <form id="tweet-form" class="mb-6" hx-get="https://x-twitter-thread-dump-api.uriyyo.com/imgs/${tweetId.value}"
+            <form id="tweet-form" class="mb-6" hx-get="https://x-twitter-thread-dump-api.uriyyo.com/twitter/imgs/${tweetId.value}"
                   hx-target="#results" hx-indicator="#loading-indicator">
                 <div class="mb-4">
                     <label for="tweetId" class="block text-sm font-medium text-gray-300 mb-1">Tweet ID or URL</label>
@@ -286,7 +286,7 @@
                     return;
                 }
                 
-                event.detail.path = `https://x-twitter-thread-dump-api.uriyyo.com/imgs/${tweetId}`;
+                event.detail.path = `https://x-twitter-thread-dump-api.uriyyo.com/twitter/imgs/${tweetId}`;
                 
                 // Add class to indicate loading
                 document.getElementById('loading-indicator').classList.remove('hidden');

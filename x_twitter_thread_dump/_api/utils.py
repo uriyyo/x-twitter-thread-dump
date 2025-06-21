@@ -44,4 +44,5 @@ def retry[**P, R](
 
 __all__ = [
     "limit_concurrency",
+    "retry",
 ]

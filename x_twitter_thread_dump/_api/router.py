@@ -24,7 +24,9 @@ from .schemas import Base64ImageSchema, ImagesSchema, MediaSchema, TweetID, Twee
 from .settings import settings
 from .utils import limit_concurrency, retry
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/twitter",
+)
 
 
 @router.get("/")
