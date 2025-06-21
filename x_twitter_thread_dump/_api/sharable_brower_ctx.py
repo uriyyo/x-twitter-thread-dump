@@ -136,8 +136,11 @@ class SharableBrowserCtx:
                 yield browser
         except TargetClosedError:
             if self.ctx:
+                logfire.info("Target closed error, closing browser context")
                 logger.warning("Target closed error, force closing browser context")
+
                 await self.ctx.safe_aclose()
+                self.ctx = None
 
             raise
 
