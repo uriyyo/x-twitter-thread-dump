@@ -59,7 +59,7 @@ def divide_images(
     chunk = [first]
 
     for rect in rest:
-        if chunk[-1]["bottom"] - chunk[0]["top"] > max_chunk_height:
+        if rect["bottom"] - chunk[0]["top"] > max_chunk_height:
             yield _img_from_chunk()
             chunk = [rect]
         else:
