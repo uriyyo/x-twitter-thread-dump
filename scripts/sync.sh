@@ -12,6 +12,8 @@ cp misc/nginx.conf /etc/nginx/nginx.conf
 cp misc/x-twitter-thread-dump-api.service /etc/systemd/system/x-twitter-thread-dump-api.service
 
 systemctl daemon-reload
+
+service nginx restart
 service x-twitter-thread-dump-api restart
 
 EOF
