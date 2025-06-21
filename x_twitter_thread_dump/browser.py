@@ -16,7 +16,7 @@ from .types import BrowserCtxConfig, ClientBoundingRect, Img, Viewport
 DEFAULT_CONFIG: BrowserCtxConfig = {
     "color_scheme": "dark",
     "viewport": {"width": 500, "height": 1000},
-    "device_scale_factor": 1.5,
+    "device_scale_factor": 2.0,
     "is_mobile": True,
     "locale": "en-US",
     "offline": True,
