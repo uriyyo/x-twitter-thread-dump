@@ -1,3 +1,4 @@
+from asyncio import timeout
 from typing import Annotated, Any
 
 import logfire
@@ -82,7 +83,7 @@ async def render_html(
     chunk: str,
     config: BrowserCtxConfig | None = None,
 ) -> HTMLToImageResult:
-    async with browser_ctx.acquire() as browser:
+    async with timeout(settings.IMAGE_RENDERING_TIMEOUT), browser_ctx.acquire() as browser:
         with measure_html_render_duration():
             return await html_to_image_async(
                 chunk,
