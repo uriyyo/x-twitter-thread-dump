@@ -18,6 +18,10 @@ The project allows users to easily convert Twitter threads into shareable images
 
 For detailed installation and usage instructions, please refer to the project's documentation or use the help options provided by the CLI and API.
 
+```shell
+uv run to-image --tweet-url <tweet_url>
+```
+
 ## Project Structure
 
 The codebase is organized into modules for handling browser interactions, image generation, API routing, and command-line parsing. Key components include:

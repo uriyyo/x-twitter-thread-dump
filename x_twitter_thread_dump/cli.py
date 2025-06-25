@@ -1,8 +1,6 @@
 from pathlib import Path
-from typing import cast
 
 import click
-from PIL.Image import Image
 
 from x_twitter_thread_dump import x_twitter_thread_dump_async_client
 from x_twitter_thread_dump.utils import async_to_sync, get_tweet_id_from_url
@@ -40,18 +38,25 @@ def cli() -> None:
     help="Number of tweets to include in each image. If not specified, all tweets will be included in a single image.",
 )
 @click.option(
+    "--max-tweet-height",
+    type=int,
+    default=None,
+    help="Maximum height of each tweet in pixels. If not specified, no limit will be applied.",
+)
+@click.option(
     "--timeout",
     type=int,
     default=None,
     help="Timeout for the request in seconds. If not specified, the default timeout will be used.",
 )
 @async_to_sync
-async def dump_to_image(
+async def dump_to_image(  # noqa: PLR0913
     *,
     tweet_url: str,
     limit: int | None = None,
     output: Path,
     tweets_per_image: int | None = None,
+    max_tweet_height: int | None = None,
     timeout: int | None = None,
 ) -> None:
     tweet_id = get_tweet_id_from_url(tweet_url)
@@ -61,17 +66,17 @@ async def dump_to_image(
         result = await client.thread_to_image(
             thread,
             tweets_per_image=tweets_per_image,
+            max_tweet_height=max_tweet_height,
         )
 
         match result:
             case []:
                 raise RuntimeError(f"No tweets found for {tweet_id}")
+            case [image]:
+                image.save(output)
             case [*images] if len(images) > 1:
                 for i, img in enumerate(images, 1):
                     img.save(output.with_name(f"{output.stem}_{i}.png"))
-            case [image] | image:
-                image = cast(Image, image)
-                image.save(output)
 
 
 if __name__ == "__main__":
