@@ -20,61 +20,6 @@ from .render import render_thread_html
 _QUERY_ID_REGEX = re.compile(r'"queryID":\s*?"(\d+)"')
 _POST_ID_REGEX = re.compile(r'"postID":\s*?"(\d+)"')
 
-raw_headers = """
-accept
-*/*
-accept-encoding
-gzip, deflate, br, zstd
-accept-language
-uk-UA,uk;q=0.9
-origin
-https://www.threads.com
-priority
-u=1, i
-referer
-https://www.threads.com/@yuroduvuy/post/DLKrnn1NckT?xmt=AQF0gpe2HOYODntroTGB2GVUExaZ4TiFdcgUdBqvx2g11Q
-sec-ch-prefers-color-scheme
-dark
-sec-ch-ua
-"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"
-sec-ch-ua-full-version-list
-"Google Chrome";v="137.0.7151.104", "Chromium";v="137.0.7151.104", "Not/A)Brand";v="24.0.0.0"
-sec-ch-ua-mobile
-?0
-sec-ch-ua-model
-""
-sec-ch-ua-platform
-"Windows"
-sec-ch-ua-platform-version
-"19.0.0"
-sec-fetch-dest
-empty
-sec-fetch-mode
-cors
-sec-fetch-site
-same-origin
-user-agent
-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36
-x-asbd-id
-359341
-x-bloks-version-id
-e4f12b62f425c97b6a785c27bcb08f35b3bf4ff77ba17a7eed5e5116ce52ee4e
-x-csrftoken
-1D69gbSkkUIlJ0ePyicgry
-x-fb-friendly-name
-BarcelonaPostPageDirectQuery
-x-fb-lsd
-AVr3nBbXiVE
-x-ig-app-id
-238260118697367
-x-logged-out-threads-migrated-request
-true
-x-root-field-name
-xdt_api__v1__text_feed__media_id__replies__connection
-""".strip().splitlines()
-
-_headers = dict(zip(raw_headers[::2], raw_headers[1::2], strict=False))
-
 
 @dataclass
 class ThreadsAsyncClient:
