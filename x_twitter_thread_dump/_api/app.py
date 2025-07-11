@@ -56,4 +56,3 @@ if settings.LOGFIRE_TOKEN:
     logfire.instrument_fastapi(app)
     logfire.instrument_httpx()
     logfire.instrument_pydantic()
-    logfire.instrument_system_metrics()
