@@ -11,7 +11,6 @@ PrivateTmp=true
 ExecStart=/root/.local/bin/uv run uvicorn \
         --proxy-headers \
         --forwarded-allow-ips='*' \
-        --workers=2 \
         --port=8000 \
         --no-access-log \
         x_twitter_thread_dump._api:app
