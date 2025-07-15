@@ -8,7 +8,7 @@ git reset --hard origin/main
 
 /root/.local/bin/uv sync --extra server
 
-cp misc/nginx.conf /etc/nginx/nginx.conf
+cp misc/nginx.conf /etc/nginx/sites-available/x-twitter-thread-dump.conf
 cp misc/sitemap.xml /var/www/x-twitter-thread-dump/sitemap.xml
 cp misc/robots.txt /var/www/x-twitter-thread-dump/robots.txt
 
