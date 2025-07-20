@@ -7,6 +7,9 @@ Type=simple
 CPUWeight=20
 CPUQuota=20%
 IOWeight=20
+Restart=always
+RestartSec=1
+RuntimeMaxSec=30m
 
 WorkingDirectory=/root/x-twitter-thread-dump
 PrivateTmp=true
@@ -18,8 +21,6 @@ ExecStart=/root/.local/bin/uv run uvicorn \
         --no-access-log \
         x_twitter_thread_dump._api:app
 ExecReload=/bin/kill -HUP ${MAINPID}
-RestartSec=1
-Restart=always
 
 [Install]
 WantedBy=multi-user.target
