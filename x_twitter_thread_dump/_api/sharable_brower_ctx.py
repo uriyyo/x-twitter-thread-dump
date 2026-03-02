@@ -131,6 +131,11 @@ class SharableBrowserCtx:
 
     @asynccontextmanager
     async def acquire(self) -> AsyncIterator[AsyncBrowser]:
+        async with async_browser(headless=self.headless) as browser:
+            yield browser
+
+    @asynccontextmanager
+    async def _old_acquire(self) -> AsyncIterator[AsyncBrowser]:
         try:
             async with self._acquire() as browser:
                 yield browser

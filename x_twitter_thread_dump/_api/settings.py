@@ -11,7 +11,7 @@ class Settings(BaseSettings):
         "extra": "ignore",
     }
 
-    IMAGE_RENDERING_CONCURRENCY: int = 10
+    IMAGE_RENDERING_CONCURRENCY: int = 3
     IMAGE_RENDERING_RETRIES: int = 3
     IMAGE_RENDERING_TIMEOUT: float = 60.0
 
