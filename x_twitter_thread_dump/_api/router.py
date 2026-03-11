@@ -22,7 +22,7 @@ from .dependencies import (
 from .metrics import measure_html_render_duration
 from .schemas import Base64ImageSchema, ImagesSchema, MediaSchema, TweetID, TweetSchema
 from .settings import settings
-from .utils import limit_concurrency, retry
+from .utils import limit_concurrency, retry, shielded
 
 router = APIRouter(
     prefix="/twitter",
@@ -79,6 +79,7 @@ async def get_tweet_html(
     excs=(TargetClosedError,),
 )
 @limit_concurrency(settings.IMAGE_RENDERING_CONCURRENCY)
+@shielded
 @logfire.instrument()
 async def render_html(
     browser_ctx: CurrentSharableBrowserCtx,

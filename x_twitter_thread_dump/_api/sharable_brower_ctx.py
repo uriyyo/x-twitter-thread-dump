@@ -10,6 +10,7 @@ from functools import cached_property
 from typing import Any, Self
 
 import logfire
+import psutil
 from aiorwlock import RWLock
 from playwright._impl._errors import TargetClosedError
 
@@ -17,6 +18,27 @@ from x_twitter_thread_dump._api.metrics import shared_browser_age
 from x_twitter_thread_dump.browser import AsyncBrowser, async_browser
 
 logger = logging.getLogger(__name__)
+
+
+def _kill_browser_process(browser: AsyncBrowser | None) -> None:
+    if browser is not None:
+        try:
+            proc = browser._impl_obj._connection._transport._proc  # noqa: SLF001
+            if proc and proc.pid:
+                process = psutil.Process(proc.pid)
+                process.kill()
+        except (psutil.NoSuchProcess, AttributeError):
+            pass
+
+    for process in psutil.process_iter(["pid", "name", "cmdline"]):
+        try:
+            name = (process.info.get("name") or "").lower()
+            cmdline = " ".join(process.info.get("cmdline") or []).lower()
+
+            if "chromium" in name or "chrome" in name or "playwright" in cmdline:
+                process.kill()
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
 
 
 @dataclass
@@ -131,8 +153,12 @@ class SharableBrowserCtx:
 
     @asynccontextmanager
     async def acquire(self) -> AsyncIterator[AsyncBrowser]:
-        async with async_browser(headless=self.headless) as browser:
-            yield browser
+        browser = None
+        try:
+            async with self._rw_lock.writer, async_browser(headless=self.headless) as browser:
+                yield browser
+        finally:
+            _kill_browser_process(browser)
 
     @asynccontextmanager
     async def _old_acquire(self) -> AsyncIterator[AsyncBrowser]:

@@ -42,7 +42,16 @@ def retry[**P, R](
     return decorator
 
 
+def shielded[**P, R](func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
+    @wraps(func)
+    async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        return await asyncio.shield(func(*args, **kwargs))
+
+    return wrapper
+
+
 __all__ = [
     "limit_concurrency",
     "retry",
+    "shielded",
 ]
