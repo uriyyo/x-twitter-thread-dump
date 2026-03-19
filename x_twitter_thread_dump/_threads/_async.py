@@ -13,11 +13,20 @@ from x_twitter_thread_dump.browser import AsyncBrowser, html_to_image_async
 from x_twitter_thread_dump.consts import DEFAULT_RETRIES, DEFAULT_TIMEOUT
 from x_twitter_thread_dump.types import BrowserCtxConfig, Img
 
-from .consts import IG_APP_ID
+from .consts import IG_APP_ID, QUERY_VARS
 from .entities import ThreadPost
 from .render import render_thread_html
 
-_QUERY_INFO_REGEX = re.compile(r'"queryID":\s*?"(\d+)"\s*,\s*"variables":\s*(\{[^{}]*\})')
+_QUERY_ID_REGEX = re.compile(r'"queryID":\s*?"(\d+)"')
+_LSD_REGEX = re.compile(r'"LSD",\[\],\{"token":"([^"]+)"')
+_SHORTCODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+
+
+def _shortcode_to_pk(shortcode: str) -> str:
+    n = 0
+    for c in shortcode:
+        n = n * 64 + _SHORTCODE_ALPHABET.index(c)
+    return str(n)
 
 
 @dataclass
@@ -37,24 +46,31 @@ class ThreadsAsyncClient:
         )
         response.raise_for_status()
 
-        if match := _QUERY_INFO_REGEX.search(response.text):
+        if match := _QUERY_ID_REGEX.search(response.text):
             query_id = match.group(1)
-            query_vars = json.loads(match.group(2))
         else:
-            raise ValueError("Could not find queryID/variables in the response.")
+            raise ValueError("Could not find queryID in the response.")
 
-        csrf_token = self.client.cookies["csrftoken"]
+        if match := _LSD_REGEX.search(response.text):
+            lsd = match.group(1)
+        else:
+            raise ValueError("Could not find LSD token in the response.")
+
+        pk = _shortcode_to_pk(post_id)
 
         response = await self.client.post(
             "/graphql/query",
             data={
-                "variables": json.dumps(query_vars),
+                "variables": json.dumps(QUERY_VARS | {"postID": pk}),
                 "server_timestamps": True,
                 "doc_id": int(query_id),
+                "lsd": lsd,
             },
             headers={
                 "x-ig-app-id": IG_APP_ID,
-                "x-csrftoken": csrf_token,
+                "x-csrftoken": self.client.cookies["csrftoken"],
+                "x-fb-lsd": lsd,
+                "accept": "*/*",
             },
         )
         response.raise_for_status()

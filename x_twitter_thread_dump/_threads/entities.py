@@ -185,6 +185,8 @@ class ThreadPost:
         match raw_data:
             case {"data": {"data": {"edges": [{"node": {"thread_items": [*items]}}, *_]}}}:
                 return [cls.from_raw_response(cast(AnyDict, item)) for item in items]
+            case {"data": {"feedData": {"edges": [{"text_post_app_thread": {"thread_items": [*items]}}, *_]}}}:
+                return [cls.from_raw_response(cast(AnyDict, item)) for item in items]
             case _:
                 raise ValueError(f"Invalid raw data format for ThreadTweet: {raw_data!r}")
 
