@@ -3,7 +3,7 @@ import re
 from asyncio import gather
 from collections import defaultdict
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
 from typing import Any
 
@@ -20,6 +20,7 @@ from .render import render_thread_html
 
 _QUERY_ID_REGEX = re.compile(r'"queryID":\s*?"(\d+)"')
 _LSD_REGEX = re.compile(r'"LSD",\[\],\{"token":"([^"]+)"')
+_SSR_PRELOADER_REGEX = re.compile(r'adp_BarcelonaPostPageDirectQueryRelayPreloader_\w+",')
 _SHORTCODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
 
@@ -28,6 +29,26 @@ def _shortcode_to_pk(shortcode: str) -> str:
     for c in shortcode:
         n = n * 64 + _SHORTCODE_ALPHABET.index(c)
     return str(n)
+
+
+def _extract_ssr_data(html: str) -> dict[Any, Any] | None:
+    pos = 0
+    while match := _SSR_PRELOADER_REGEX.search(html, pos):
+        pos = match.end()
+
+        with suppress(json.JSONDecodeError, KeyError, ValueError):
+            data, _ = json.JSONDecoder().raw_decode(html, match.end())
+
+            match data:
+                case {
+                    "__bbox": {
+                        "complete": True,
+                        "result": {**result},
+                    },
+                }:
+                    return result
+
+    return None
 
 
 @dataclass
@@ -46,6 +67,9 @@ class ThreadsAsyncClient:
             },
         )
         response.raise_for_status()
+
+        if ssr_data := _extract_ssr_data(response.text):
+            return ThreadPost.thread_from_raw_response(ssr_data)
 
         if match := _QUERY_ID_REGEX.search(response.text):
             query_id = match.group(1)
