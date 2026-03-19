@@ -13,12 +13,11 @@ from x_twitter_thread_dump.browser import AsyncBrowser, html_to_image_async
 from x_twitter_thread_dump.consts import DEFAULT_RETRIES, DEFAULT_TIMEOUT
 from x_twitter_thread_dump.types import BrowserCtxConfig, Img
 
-from .consts import IG_APP_ID, QUERY_VARS
+from .consts import IG_APP_ID
 from .entities import ThreadPost
 from .render import render_thread_html
 
-_QUERY_ID_REGEX = re.compile(r'"queryID":\s*?"(\d+)"')
-_POST_ID_REGEX = re.compile(r'"postID":\s*?"(\d+)"')
+_QUERY_INFO_REGEX = re.compile(r'"queryID":\s*?"(\d+)"\s*,\s*"variables":\s*(\{[^{}]*\})')
 
 
 @dataclass
@@ -38,22 +37,18 @@ class ThreadsAsyncClient:
         )
         response.raise_for_status()
 
-        if match := _QUERY_ID_REGEX.search(response.text):
+        if match := _QUERY_INFO_REGEX.search(response.text):
             query_id = match.group(1)
+            query_vars = json.loads(match.group(2))
         else:
-            raise ValueError("Could not find queryID in the response.")
-
-        if match := _POST_ID_REGEX.search(response.text):
-            post_id = match.group(1)
-        else:
-            raise ValueError("Could not find postID in the response.")
+            raise ValueError("Could not find queryID/variables in the response.")
 
         csrf_token = self.client.cookies["csrftoken"]
 
         response = await self.client.post(
             "/graphql/query",
             data={
-                "variables": json.dumps(QUERY_VARS | {"postID": post_id}),
+                "variables": json.dumps(query_vars),
                 "server_timestamps": True,
                 "doc_id": int(query_id),
             },
