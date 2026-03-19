@@ -186,7 +186,7 @@ class ThreadPost:
             case {"data": {"data": {"edges": [{"node": {"thread_items": [*items]}}, *_]}}}:
                 return [cls.from_raw_response(cast(AnyDict, item)) for item in items]
             case _:
-                raise ValueError("Invalid raw data format for ThreadTweet")
+                raise ValueError(f"Invalid raw data format for ThreadTweet: {raw_data!r}")
 
     def all_media(self) -> Iterator[ThreadMedia]:
         yield from self.media
