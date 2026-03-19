@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Response
 from starlette.responses import HTMLResponse
 
 from x_twitter_thread_dump._api.dependencies import CurrentBrowserCtxConfig, CurrentSharableBrowserCtx
@@ -8,7 +8,7 @@ from x_twitter_thread_dump._api.router import render_html
 from x_twitter_thread_dump._api.schemas import Base64ImageSchema, ImagesSchema, MediaSchema
 from x_twitter_thread_dump._base import BaseXTwitterThreadDumpClient
 from x_twitter_thread_dump._threads.render import render_thread_html
-from x_twitter_thread_dump.images import image_to_base64str
+from x_twitter_thread_dump.images import image_to_base64str, image_to_bytes
 
 from .dependencies import CurrentThread, CurrentThreadsClient, CurrentThreadWithPreviews
 
@@ -60,6 +60,24 @@ async def get_threads_imgs(  # noqa: PLR0913
     return ImagesSchema(
         images=images,
         media=media,
+    )
+
+
+@router.get("/raw-img/{post_id}")
+async def get_threads_raw_img(
+    thread: CurrentThreadWithPreviews,
+    browser_ctx: CurrentSharableBrowserCtx,
+    config: CurrentBrowserCtxConfig,
+) -> Response:
+    html = render_thread_html(thread)
+    result = await render_html(browser_ctx, chunk=html, config=config)
+
+    return Response(
+        content=image_to_bytes(result.img),
+        media_type="image/png",
+        headers={
+            "Content-Disposition": "inline; filename=thread.png",
+        },
     )
 
 

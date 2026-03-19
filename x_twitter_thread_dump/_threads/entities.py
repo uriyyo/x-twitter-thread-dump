@@ -110,6 +110,7 @@ class ThreadPost:
     like_count: int | None = None
     quote_count: int | None = None
     repost_count: int | None = None
+    reshare_count: int | None = None
     direct_reply_count: int | None = None
     taken_at: datetime
     media: list[ThreadMedia] = field(default_factory=list)
@@ -118,7 +119,7 @@ class ThreadPost:
     raw_data: AnyDict | None = field(default=None, repr=False)
 
     @classmethod
-    def from_raw_response(cls, raw_data: AnyDict, /) -> Self:
+    def from_raw_response(cls, raw_data: AnyDict, /) -> Self:  # noqa: PLR0912
         match raw_data:
             case {"post": _post}:
                 raw_data = cast(AnyDict, _post)
@@ -152,6 +153,13 @@ class ThreadPost:
                         repost_count = None
                         direct_reply_count = None
 
+                reshare_count: int | None = None
+                match post_app_info:
+                    case {"reshare_count": int(_reshare_count)}:
+                        reshare_count = _reshare_count
+                    case _:
+                        reshare_count = None
+
                 match post_app_info:
                     case {"share_info": {"quoted_post": quoted_post}} if quoted_post:
                         quoted_thread: Self | None = cls.from_raw_response(cast(AnyDict, quoted_post))
@@ -171,6 +179,7 @@ class ThreadPost:
                     like_count=like_count,
                     quote_count=quote_count,
                     repost_count=repost_count,
+                    reshare_count=reshare_count,
                     direct_reply_count=direct_reply_count,
                     taken_at=datetime.fromtimestamp(taken_at),
                     media=ThreadMedia.medias_from_raw_response(rest),
