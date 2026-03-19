@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from typing import Any
 
 from httpx import AsyncClient, AsyncHTTPTransport
 
@@ -125,6 +126,7 @@ async def threads_async_client(
     *,
     timeout: float | None = None,
     retries: int | None = None,
+    cookies: dict[str, Any] | None = None,
 ) -> AsyncIterator[ThreadsAsyncClient]:
     async with AsyncClient(
         base_url="https://www.threads.com/",
@@ -133,6 +135,7 @@ async def threads_async_client(
         transport=AsyncHTTPTransport(
             retries=retries or DEFAULT_RETRIES,
         ),
+        cookies=cookies,
     ) as client:
         yield ThreadsAsyncClient(client=client)
 
