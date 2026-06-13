@@ -59,6 +59,8 @@ class TikTokComment:
     digg_count: int = 0
     reply_total: int = 0
     created: datetime
+    images: list[TikTokMedia] = field(default_factory=list)
+    is_creator: bool = False
 
     raw_data: AnyDict | None = field(default=None, repr=False)
 
@@ -79,6 +81,10 @@ class TikTokComment:
                     digg_count=rest.get("digg_count", 0),
                     reply_total=rest.get("reply_total", 0),
                     created=datetime.fromtimestamp(create_time),
+                    images=[
+                        TikTokMedia(url=url, preview_url=url, type="image")
+                        for url in (rest.get("images") or [])
+                    ],
                     raw_data=raw_data,
                 )
             case _:
@@ -87,6 +93,10 @@ class TikTokComment:
     def all_preview_media(self) -> Iterator[TikTokMedia]:
         if self.user.avatar.preview_url:
             yield self.user.avatar
+
+        for image in self.images:
+            if image.preview_url:
+                yield image
 
 
 __all__ = [

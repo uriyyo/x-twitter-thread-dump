@@ -23,8 +23,7 @@ async def current_comments(
     client: CurrentTikTokClient,
     url: Annotated[TikTokShareURL, Query()],
 ) -> list[TikTokComment]:
-    comment, parent = await client.resolve_comment(url)
-    return [parent, comment] if parent else [comment]
+    return await client.resolve_comment(url)
 
 
 CurrentComments: TypeAlias = Annotated[

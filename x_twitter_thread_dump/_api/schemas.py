@@ -103,6 +103,8 @@ class TikTokCommentSchema(BaseSchema):
     digg_count: int = 0
     reply_total: int = 0
     created: datetime
+    images: list[TikTokMediaSchema] = []
+    is_creator: bool = False
 
 
 __all__ = [
