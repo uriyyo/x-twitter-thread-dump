@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from ._threads import router as threads_router
+from ._tiktok import router as tiktok_router
 from .router import router
 from .settings import settings
 from .sharable_brower_ctx import SharableBrowserCtx
@@ -51,6 +52,7 @@ app = FastAPI(
 )
 app.include_router(router)
 app.include_router(threads_router)
+app.include_router(tiktok_router)
 
 if settings.LOGFIRE_TOKEN:
     logfire.instrument_fastapi(app)

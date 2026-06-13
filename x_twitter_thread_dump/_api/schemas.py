@@ -72,10 +72,47 @@ class TweetSchema(BaseSchema):
     media: list[TweetMediaSchema] = Field(default_factory=list)
 
 
+type TikTokShareURL = Annotated[
+    str,
+    Field(
+        description="A TikTok shared-comment link, e.g. 'https://vt.tiktok.com/ZS9jhAMYEWBdw-XAW67/'",
+        min_length=1,
+        examples=["https://vt.tiktok.com/ZS9jhAMYEWBdw-XAW67/"],
+    ),
+]
+
+
+class TikTokMediaSchema(BaseSchema):
+    url: str
+    preview_url: str
+    type: Literal["image", "video"]
+
+
+class TikTokUserSchema(BaseSchema):
+    id: str
+    nickname: str
+    unique_id: str
+    avatar: TikTokMediaSchema | None = None
+
+
+class TikTokCommentSchema(BaseSchema):
+    id: str
+    text: str
+    user: TikTokUserSchema
+
+    digg_count: int = 0
+    reply_total: int = 0
+    created: datetime
+
+
 __all__ = [
     "Base64ImageSchema",
     "ImagesSchema",
     "MediaSchema",
+    "TikTokCommentSchema",
+    "TikTokMediaSchema",
+    "TikTokShareURL",
+    "TikTokUserSchema",
     "TweetID",
     "TweetMediaSchema",
     "TweetSchema",
