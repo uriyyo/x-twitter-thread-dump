@@ -20,7 +20,7 @@ from .render import render_thread_html
 
 _QUERY_ID_REGEX = re.compile(r'"queryID":\s*?"(\d+)"')
 _LSD_REGEX = re.compile(r'"LSD",\[\],\{"token":"([^"]+)"')
-_SSR_PRELOADER_REGEX = re.compile(r'adp_BarcelonaPostPageDirectQueryRelayPreloader_\w+",')
+_SSR_PRELOADER_REGEX = re.compile(r'adp_BarcelonaPostPage(\w+?)QueryRelayPreloader_\w+",')
 _SHORTCODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
 
@@ -31,13 +31,15 @@ def _shortcode_to_pk(shortcode: str) -> str:
     return str(n)
 
 
-def _extract_ssr_data(html: str) -> dict[Any, Any] | None:
+def _extract_ssr_data(html: str) -> dict[str, dict[Any, Any]]:
+    results: dict[str, dict[Any, Any]] = {}
+
     pos = 0
-    while match := _SSR_PRELOADER_REGEX.search(html, pos):
-        pos = match.end()
+    while preloader := _SSR_PRELOADER_REGEX.search(html, pos):
+        pos = preloader.end()
 
         with suppress(json.JSONDecodeError, KeyError, ValueError):
-            data, _ = json.JSONDecoder().raw_decode(html, match.end())
+            data, _ = json.JSONDecoder().raw_decode(html, preloader.end())
 
             match data:
                 case {
@@ -46,9 +48,31 @@ def _extract_ssr_data(html: str) -> dict[Any, Any] | None:
                         "result": {**result},
                     },
                 }:
-                    return result
+                    results.setdefault(preloader.group(1), result)
 
-    return None
+    return results
+
+
+def _extract_ssr_thread(html: str) -> list[ThreadPost] | None:
+    match _extract_ssr_data(html):
+        # legacy post page, single query with the whole thread
+        case {"Direct": direct}:
+            return ThreadPost.thread_from_raw_response(direct)
+        # post page split into target post + upward (parents, root first) queries
+        case {"Target": {"data": {"media": {**target}}}, **rest}:
+            match rest:
+                case {
+                    "Upward": {
+                        "data": {"media": {"text_post_app_info": {"containing_thread": {"posts": {"edges": [*edges]}}}}}
+                    }
+                }:
+                    parents = [edge["node"] for edge in edges]
+                case _:
+                    parents = []
+
+            return [ThreadPost.from_raw_response(post) for post in [*parents, target]]
+        case _:
+            return None
 
 
 @dataclass
@@ -68,8 +92,8 @@ class ThreadsAsyncClient:
         )
         response.raise_for_status()
 
-        if ssr_data := _extract_ssr_data(response.text):
-            return ThreadPost.thread_from_raw_response(ssr_data)
+        if thread := _extract_ssr_thread(response.text):
+            return thread
 
         if match := _QUERY_ID_REGEX.search(response.text):
             query_id = match.group(1)
