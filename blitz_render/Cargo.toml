@@ -1,0 +1,30 @@
+[package]
+name = "blitz-render"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+name = "_blitz_render"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.29", features = ["abi3-py313"] }
+
+blitz-dom = { git = "https://github.com/DioxusLabs/blitz", rev = "fe33b778baaef5375d941c8a4f491f62cbd31d30", default-features = false, features = ["svg", "woff", "system-fonts"] }
+blitz-html = { git = "https://github.com/DioxusLabs/blitz", rev = "fe33b778baaef5375d941c8a4f491f62cbd31d30" }
+blitz-paint = { git = "https://github.com/DioxusLabs/blitz", rev = "fe33b778baaef5375d941c8a4f491f62cbd31d30" }
+blitz-traits = { git = "https://github.com/DioxusLabs/blitz", rev = "fe33b778baaef5375d941c8a4f491f62cbd31d30" }
+
+anyrender = "0.14"
+anyrender_vello_cpu = "0.18"
+data-url = "0.3"
+parley = { version = "0.12", default-features = false, features = ["std"] }
+# blitz-dom pulls `image` without codecs; enable the ones our templates embed
+image = { version = "0.25.6", default-features = false, features = ["jpeg", "png", "webp", "gif"] }
+png = "0.18"
+anyrender_skia = "0.12"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

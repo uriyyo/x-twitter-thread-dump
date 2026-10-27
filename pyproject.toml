@@ -31,6 +31,15 @@ server = [
     "psutil>=7.0.0",
     "logfire[fastapi,httpx,system-metrics]>=3.21.1",
 ]
+blitz = [
+    "blitz-render",
+]
+
+[tool.uv.workspace]
+members = ["blitz_render"]
+
+[tool.uv.sources]
+blitz-render = { workspace = true }
 
 [project.scripts]
 x-twitter-thread-dump = "x_twitter_thread_dump.cli:cli"

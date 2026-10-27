@@ -1,9 +1,15 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.15'",
     "python_full_version < '3.15'",
+]
+
+[manifest]
+members = [
+    "blitz-render",
+    "x-twitter-thread-dump",
 ]
 
 [[package]]
@@ -106,6 +112,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/43/65/318323f98dbee45d4
 wheels = [
     { url = "https://files.pythonhosted.org/packages/88/c6/92fcd42f1ba33e1184263f25bfabf3d27c383410470f169e4b8163bf9c17/beautifulsoup4-4.15.0-py3-none-any.whl", hash = "sha256:d6f88de62e1d4e38ecb1077eb9724cd0eff29d2a08ca16a401e9b9e93f117cf9", size = 109924, upload-time = "2026-06-07T16:44:21.566Z" },
 ]
+
+[[package]]
+name = "blitz-render"
+version = "0.1.0"
+source = { editable = "blitz_render" }
 
 [[package]]
 name = "certifi"
@@ -1290,6 +1301,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+blitz = [
+    { name = "blitz-render" },
+]
 server = [
     { name = "aiorwlock" },
     { name = "fastapi" },
@@ -1310,6 +1324,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiorwlock", marker = "extra == 'server'", specifier = ">=1.5.0" },
+    { name = "blitz-render", marker = "extra == 'blitz'", editable = "blitz_render" },
     { name = "click", specifier = ">=8.2.1" },
     { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.115.12" },
     { name = "httpx", specifier = ">=0.28.1" },
@@ -1324,7 +1339,7 @@ requires-dist = [
     { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.34.2" },
     { name = "xclienttransaction", specifier = ">=1.0.0" },
 ]
-provides-extras = ["server"]
+provides-extras = ["server", "blitz"]
 
 [package.metadata.requires-dev]
 dev = [
