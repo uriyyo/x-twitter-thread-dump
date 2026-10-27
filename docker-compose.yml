@@ -1,0 +1,12 @@
+services:
+  x-twitter-thread-dump-api:
+    build: .
+    container_name: x-twitter-thread-dump-api
+    restart: unless-stopped
+    env_file: .env
+    networks: [edge]
+
+networks:
+  edge:
+    external: true
+    name: edge
