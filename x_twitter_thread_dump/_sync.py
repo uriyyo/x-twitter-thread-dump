@@ -9,7 +9,7 @@ from x_client_transaction.utils import generate_headers, get_ondemand_file_url
 
 from ._base import BaseXTwitterThreadDumpClient
 from .browser import html_to_image
-from .consts import DEFAULT_BEARER_TOKEN, DEFAULT_RETRIES, DEFAULT_TIMEOUT
+from .consts import DEFAULT_BEARER_TOKEN, DEFAULT_RETRIES, DEFAULT_TIMEOUT, HOME_PAGE_URL
 from .entities import Thread, Tweet
 from .render import render_thread_html
 from .types import BrowserCtxConfig, Img
@@ -28,7 +28,7 @@ def _get_client_transaction_client(
             retries=retries or DEFAULT_RETRIES,
         ),
     ) as client:
-        home_page = client.get(url="https://x.com")
+        home_page = client.get(url=HOME_PAGE_URL)
         home_page_response = response_to_bs4(home_page)
 
         ondemand_file_url = get_ondemand_file_url(home_page_response)

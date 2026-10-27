@@ -1,6 +1,10 @@
 DEFAULT_TIMEOUT = 120  # seconds
 DEFAULT_RETRIES = 5
 
+# logged-out x.com redirects to the new x-web app, which lacks the ondemand.s chunk map;
+# /i/jf/ still serves the responsive-web page with everything ClientTransaction needs
+HOME_PAGE_URL = "https://x.com/i/jf/"
+
 DEFAULT_BEARER_TOKEN = (
     "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"  # noqa: S105
 )
