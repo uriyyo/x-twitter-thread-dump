@@ -22,6 +22,7 @@ _QUERY_ID_REGEX = re.compile(r'"queryID":\s*?"(\d+)"')
 _LSD_REGEX = re.compile(r'"LSD",\[\],\{"token":"([^"]+)"')
 _SSR_PRELOADER_REGEX = re.compile(r'adp_BarcelonaPostPage(\w+?)QueryRelayPreloader_\w+",')
 _SHORTCODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+_POST_URL_SHORTCODE_REGEX = re.compile(r"/post/([\w-]+)")
 
 
 def _shortcode_to_pk(shortcode: str) -> str:
@@ -79,9 +80,25 @@ def _extract_ssr_thread(html: str) -> list[ThreadPost] | None:
 class ThreadsAsyncClient:
     client: AsyncClient
 
+    async def _resolve_share_code(self, share_code: str, /) -> str | None:
+        # share links (/share/<code>/) redirect to the post page (/@user/post/<shortcode>)
+        response = await self.client.get(
+            f"/share/{share_code}/",
+            headers={
+                "accept": "text/html",
+            },
+        )
+
+        if match := _POST_URL_SHORTCODE_REGEX.search(response.url.path):
+            return match.group(1)
+
+        return None
+
     async def get_thread(
         self,
         post_id: str,
+        *,
+        _resolve_share: bool = True,
     ) -> list[ThreadPost]:
         response = await self.client.get(
             f"/_/post/{post_id}",
@@ -97,6 +114,8 @@ class ThreadsAsyncClient:
 
         if match := _QUERY_ID_REGEX.search(response.text):
             query_id = match.group(1)
+        elif _resolve_share and (shortcode := await self._resolve_share_code(post_id)):
+            return await self.get_thread(shortcode, _resolve_share=False)
         else:
             raise ValueError("Could not find queryID in the response.")
 
