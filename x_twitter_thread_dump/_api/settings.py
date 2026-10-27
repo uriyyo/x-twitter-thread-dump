@@ -1,4 +1,5 @@
 import subprocess
+from typing import Literal
 
 import logfire
 from pydantic_settings import BaseSettings
@@ -11,6 +12,7 @@ class Settings(BaseSettings):
         "extra": "ignore",
     }
 
+    IMAGE_RENDERER: Literal["chrome", "blitz"] = "blitz"
     IMAGE_RENDERING_CONCURRENCY: int = 1
     IMAGE_RENDERING_RETRIES: int = 3
     IMAGE_RENDERING_TIMEOUT: float = 60.0

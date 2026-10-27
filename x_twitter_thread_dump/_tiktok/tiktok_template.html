@@ -23,7 +23,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Liberation Sans", "Noto Color Emoji", sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             line-height: 1.4;
@@ -110,6 +110,7 @@
         .comment-author .reply-arrow {
             width: 8px;
             height: 8px;
+            color: var(--secondary-text); /* used by fill="currentColor" (Blitz ignores CSS fill) */
             fill: var(--secondary-text);
         }
 
@@ -233,7 +234,7 @@ data:image/jpeg;base64,{{ media_item.raw_preview_bytes | b64encode | string }}
         <div class="comment-author">
             <span class="author-name">{{ comment.user.nickname }}</span>
             {% if reply_to %}
-            <svg class="reply-arrow" viewBox="0 0 8 8"><path d="M1 0.5l5 3.5-5 3.5z"></path></svg>
+            <svg class="reply-arrow" viewBox="0 0 8 8" fill="currentColor"><path d="M1 0.5l5 3.5-5 3.5z"></path></svg>
             <span class="reply-to-name">{{ reply_to }}</span>
             {% endif %}
             {% if comment.is_creator %}
@@ -254,12 +255,12 @@ data:image/jpeg;base64,{{ media_item.raw_preview_bytes | b64encode | string }}
             <span class="comment-time">{{ comment.created | timeago }}</span>
             <span class="comment-actions">
                 <span class="action action-like">
-                    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                     {% set likes = format_count(comment.digg_count) | trim %}
                     {% if likes %}<span class="count">{{ likes }}</span>{% endif %}
                 </span>
                 <span class="action action-dislike">
-                    <svg viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
                 </span>
             </span>
         </div>

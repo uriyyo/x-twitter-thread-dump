@@ -16,3 +16,5 @@ scripts
 docker-compose.yml
 Dockerfile
 .dockerignore
+blitz_render/target
+blitz_render/python/blitz_render/*.so

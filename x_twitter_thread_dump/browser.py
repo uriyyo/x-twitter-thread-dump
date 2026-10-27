@@ -1,10 +1,11 @@
 import math
-from asyncio import gather
+from asyncio import gather, to_thread
 from collections.abc import AsyncIterator, Iterator
 from contextlib import AsyncExitStack, ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 
+from PIL import Image
 from playwright.async_api import Browser as AsyncBrowser
 from playwright.async_api import async_playwright
 from playwright.sync_api import Browser as SyncBrowser
@@ -338,6 +339,61 @@ async def html_to_image_async(
     )
 
 
+def html_to_image_blitz(
+    html: str,
+    /,
+    *,
+    config: BrowserCtxConfig | None = None,
+) -> HTMLToImageResult:
+    # optional dependency (`blitz` extra), renders in-process without a browser
+    import blitz_render  # noqa: PLC0415
+
+    ctx_config = _get_ctx_config(config)
+    viewport = ctx_config.get("viewport", DEFAULT_CONFIG["viewport"])
+    scale = ctx_config.get("device_scale_factor", 1.0)
+
+    result = blitz_render.render(
+        html,
+        width=viewport["width"],
+        height=viewport["height"],
+        scale=scale,
+        color_scheme="dark" if ctx_config.get("color_scheme") == "dark" else "light",
+        selector=".main-container",
+        rects_selector=".main-container > .container-item",
+    )
+
+    img = Image.frombytes("RGBA", (result.width, result.height), result.rgba).convert("RGB")
+    rects = [
+        {
+            "x": rect.x,
+            "y": rect.y,
+            "width": rect.width,
+            "height": rect.height,
+            "top": rect.top,
+            "right": rect.right,
+            "bottom": rect.bottom,
+            "left": rect.left,
+        }
+        for rect in result.rects
+    ]
+
+    return HTMLToImageResult(
+        img=img,
+        rects=_normalize_reacts(rects, scale=scale),
+        scale=scale,
+    )
+
+
+async def html_to_image_blitz_async(
+    html: str,
+    /,
+    *,
+    config: BrowserCtxConfig | None = None,
+) -> HTMLToImageResult:
+    # blitz releases the GIL while rendering, so renders run in parallel in worker threads
+    return await to_thread(html_to_image_blitz, html, config=config)
+
+
 __all__ = [
     "AsyncBrowser",
     "HTMLToImageResult",
@@ -346,4 +402,6 @@ __all__ = [
     "get_browser_ctx_config",
     "html_to_image",
     "html_to_image_async",
+    "html_to_image_blitz",
+    "html_to_image_blitz_async",
 ]

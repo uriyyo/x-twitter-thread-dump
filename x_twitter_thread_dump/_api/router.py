@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse, Response
 from playwright._impl._errors import TargetClosedError
 
 from x_twitter_thread_dump import Tweet
-from x_twitter_thread_dump.browser import HTMLToImageResult, html_to_image_async
+from x_twitter_thread_dump.browser import HTMLToImageResult, html_to_image_async, html_to_image_blitz_async
 from x_twitter_thread_dump.images import image_to_base64str, image_to_bytes
 from x_twitter_thread_dump.render import render_thread_html
 from x_twitter_thread_dump.types import BrowserCtxConfig
@@ -86,6 +86,11 @@ async def render_html(
     chunk: str,
     config: BrowserCtxConfig | None = None,
 ) -> HTMLToImageResult:
+    if settings.IMAGE_RENDERER == "blitz":
+        async with timeout(settings.IMAGE_RENDERING_TIMEOUT):
+            with measure_html_render_duration():
+                return await html_to_image_blitz_async(chunk, config=config)
+
     async with timeout(settings.IMAGE_RENDERING_TIMEOUT), browser_ctx.acquire() as browser:
         with measure_html_render_duration():
             return await html_to_image_async(
